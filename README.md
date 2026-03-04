@@ -12,15 +12,112 @@ Dashboard ini membantu memahami performa penjualan, performa toko, perilaku pela
 
 # Dataset
 
-Dataset yang digunakan dalam analisis ini terdiri dari beberapa tabel utama:
+Dataset yang digunakan dalam analisis ini merupakan data transaksi retail yang telah dimodelkan menggunakan pendekatan **star schema** dalam data warehouse.
 
-- fact_transaction
-- fact_transaction_detail
-- dim_product
-- dim_customer
-- dim_category
+Dataset terdiri dari beberapa tabel utama yang terbagi menjadi **fact table** dan **dimension table**.
 
-Tabel fact digunakan untuk menyimpan data transaksi, sedangkan tabel dimensi digunakan untuk mendeskripsikan atribut produk, customer, dan kategori.
+---
+
+## Fact Tables
+
+Fact table menyimpan data transaksi utama yang berisi nilai numerik yang dapat dianalisis.
+
+### fact_transaction
+
+Tabel ini menyimpan informasi transaksi utama.
+
+Atribut utama:
+
+- invoice_id → ID unik transaksi
+- customer_id → ID pelanggan
+- store_id → ID toko tempat transaksi
+- invoice_datetime → waktu transaksi
+- payment_method → metode pembayaran (cash, debit, qris)
+
+Tabel ini digunakan untuk menganalisis jumlah transaksi dan aktivitas penjualan berdasarkan waktu, toko, dan metode pembayaran.
+
+---
+
+### fact_transaction_detail
+
+Tabel ini menyimpan detail setiap produk yang dibeli dalam suatu transaksi.
+
+Atribut utama:
+
+- invoice_id → ID transaksi
+- product_id → ID produk
+- quantity → jumlah produk yang dibeli
+- product_price → harga produk
+- line_total → total nilai penjualan per produk
+
+Tabel ini digunakan untuk menganalisis penjualan produk, revenue, serta market basket analysis.
+
+---
+
+## Dimension Tables
+
+Dimension table berfungsi untuk memberikan informasi deskriptif yang digunakan dalam analisis data.
+
+### dim_product
+
+Tabel ini menyimpan informasi produk.
+
+Atribut utama:
+
+- product_id
+- product_name
+- brand
+- product_description
+- category_id
+
+Tabel ini digunakan untuk analisis performa produk, brand, dan kategori produk.
+
+---
+
+### dim_customer
+
+Tabel ini menyimpan informasi pelanggan.
+
+Atribut utama:
+
+- customer_id
+- customer_name
+- gender
+- birth_date
+- customer_city
+
+Tabel ini digunakan untuk analisis perilaku pelanggan seperti distribusi gender, umur pelanggan, dan lokasi pelanggan.
+
+---
+
+### dim_store
+
+Tabel ini menyimpan informasi toko.
+
+Atribut utama:
+
+- store_id
+- store_name
+- store_city
+- store_type
+- store_province
+- store_open_date
+
+Tabel ini digunakan untuk analisis performa toko berdasarkan lokasi dan tipe toko.
+
+---
+
+### dim_category
+
+Tabel ini menyimpan informasi kategori produk.
+
+Atribut utama:
+
+- category_id
+- category_lvl1
+- category_lvl2
+
+Tabel ini digunakan untuk analisis kontribusi penjualan berdasarkan kategori produk.
 
 ---
 
