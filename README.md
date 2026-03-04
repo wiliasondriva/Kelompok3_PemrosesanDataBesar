@@ -1,139 +1,192 @@
+# Kelompok 3 - Pemrosesan Data Besar
+
 # Data Analyst Documentation
 
-## Project
-Retail Analytics Dashboard
+## Project Overview
 
-## Fokus Analisis
-Dokumentasi ini berisi KPI, analisis data, serta insight yang digunakan dalam pembuatan dashboard retail analytics.
+Project ini bertujuan untuk menganalisis data transaksi retail untuk menghasilkan insight bisnis melalui dashboard analitik.
 
-## Dataset yang Digunakan
+Dashboard ini membantu memahami performa penjualan, performa toko, perilaku pelanggan, serta performa produk.
+
+---
+
+# Dataset
+
+Dataset yang digunakan dalam analisis ini terdiri dari beberapa tabel utama:
+
 - fact_transaction
 - fact_transaction_detail
 - dim_product
 - dim_customer
 - dim_category
 
-## Tujuan Analisis
-1. Mengidentifikasi performa penjualan
-2. Menganalisis performa toko
-3. Menganalisis produk dan kategori
-4. Menganalisis perilaku customer
-5. Mengidentifikasi pola pembelian produk
-
-## Output Dashboard
-- KPI Metrics
-- Sales Performance
-- Store Performance
-- Product Performance
-- Customer Analysis
-- Market Basket Analysis
-
-# Sales Performance Analysis
-
-## Penjualan per Waktu
-
-Bentuk Analisis:
-Line Chart
-
-Tujuan:
-Melihat tren penjualan harian atau bulanan.
-
-Data:
-- invoice_datetime
-- line_total
-
-Tabel:
-- fact_transaction
-- fact_transaction_detail
-
-KPI:
-Revenue per Periode
+Tabel fact digunakan untuk menyimpan data transaksi, sedangkan tabel dimensi digunakan untuk mendeskripsikan atribut produk, customer, dan kategori.
 
 ---
 
-## Average Order Value per Waktu
+# KPI Dashboard
 
-Bentuk Analisis:
-Line Chart
+Dashboard menampilkan beberapa KPI utama untuk memonitor performa bisnis.
 
-Tujuan:
-Melihat perubahan nilai transaksi rata-rata.
+### Total Revenue
+Total pendapatan yang dihasilkan dari seluruh transaksi.
 
-KPI:
-Average Order Value (AOV)
+Rumus:
+SUM(line_total)
+
+---
+
+### Total Transactions
+Jumlah transaksi yang terjadi.
+
+Rumus:
+COUNT(DISTINCT invoice_id)
+
+---
+
+### Average Order Value (AOV)
+
+Rata-rata nilai transaksi pelanggan.
 
 Rumus:
 SUM(line_total) / COUNT(DISTINCT invoice_id)
 
 ---
 
-## Penjualan per Store
+### Total Active Customers
 
-Bentuk Analisis:
-Bar Chart
-
-Tujuan:
-Mengidentifikasi toko dengan performa penjualan tertinggi.
-
-KPI:
-Revenue per Store
-
-
-# Product Analysis
-
-## Top 10 Produk Terlaris
-
-Bentuk Analisis:
-Bar Chart
-
-Tujuan:
-Mengidentifikasi produk dengan penjualan tertinggi.
-
-KPI:
-Revenue per Product
-
-Rumus:
-SUM(line_total)
-
-Group by:
-product_id
-
-# Customer Analysis
-
-## Jumlah Customer Aktif
-
-KPI:
-Total Customer Aktif
+Jumlah customer yang melakukan transaksi.
 
 Rumus:
 COUNT(DISTINCT customer_id)
 
 ---
 
-## Revenue per Customer
+### Total Products
 
-Tujuan:
-Mengidentifikasi customer dengan kontribusi terbesar.
+Jumlah produk unik yang tersedia.
 
 Rumus:
-SUM(line_total)
+COUNT(DISTINCT product_id)
 
-Group by:
-customer_id
+---
 
-# Market Basket Analysis
+# Dashboard Analysis
+
+## 1. Sales Performance
+
+Analisis ini bertujuan untuk melihat tren penjualan dari waktu ke waktu.
+
+Visualisasi yang digunakan:
+
+- Line Chart : Penjualan per waktu
+- Bar Chart : Penjualan per store
+- Donut Chart : Kontribusi store terhadap total revenue
+- Bar Chart : Penjualan berdasarkan kota
+
+Tujuan analisis:
+
+- Mengidentifikasi tren penjualan
+- Mengetahui toko dengan performa terbaik
+- Mengetahui wilayah dengan penjualan tertinggi
+
+---
+
+## 2. Store Performance
+
+Analisis ini digunakan untuk membandingkan performa antar toko.
+
+Visualisasi:
+
+- Revenue per store
+- Transaksi per store
+- Average order value per store
+- Ranking store berdasarkan revenue
 
 Tujuan:
-Mengidentifikasi produk yang sering dibeli bersamaan.
 
-Metode:
+Mengetahui toko dengan performa penjualan terbaik dan mengidentifikasi toko yang perlu ditingkatkan performanya.
+
+---
+
+## 3. Product Analysis
+
+Analisis ini berfokus pada performa produk.
+
+Visualisasi:
+
+- Top 10 produk terlaris
+- Distribusi harga produk
+- Hubungan harga dan jumlah penjualan
+- Brand performance
+
+Tujuan:
+
+Mengidentifikasi produk yang paling berkontribusi terhadap penjualan.
+
+---
+
+## 4. Category Analysis
+
+Analisis kategori produk digunakan untuk mengetahui kontribusi setiap kategori terhadap total penjualan.
+
+Visualisasi:
+
+- Revenue per kategori
+- Kontribusi kategori
+- Transaksi per kategori
+- Average transaction value per kategori
+
+---
+
+## 5. Customer Analysis
+
+Analisis pelanggan bertujuan memahami perilaku pelanggan.
+
+Visualisasi:
+
+- Jumlah customer aktif
+- Revenue per customer
+- Revenue berdasarkan gender
+- Customer berdasarkan kelompok umur
+
+---
+
+## 6. Market Basket Analysis
+
+Market Basket Analysis digunakan untuk menemukan pola pembelian produk yang sering dibeli bersamaan.
+
+Metode yang digunakan:
+
 Association Rule Mining
 
 Algoritma:
+
 - Apriori
 - FP-Growth
 
-Metrics:
+Metrics yang digunakan:
+
 - Support
 - Confidence
 - Lift
+
+---
+
+# Business Insight
+
+Beberapa insight yang dapat dihasilkan dari analisis dashboard:
+
+1. Store dengan revenue tertinggi dapat diidentifikasi untuk menjadi benchmark performa.
+2. Produk dengan penjualan tertinggi dapat dijadikan fokus strategi promosi.
+3. Kota dengan transaksi terbanyak menunjukkan potensi pasar yang lebih besar.
+4. Analisis customer membantu memahami segmen pelanggan yang paling menguntungkan.
+5. Market basket analysis membantu meningkatkan strategi cross-selling.
+
+---
+
+# Kesimpulan
+
+Dashboard analitik ini membantu memahami performa bisnis retail secara menyeluruh melalui analisis data transaksi, produk, pelanggan, dan kategori produk.
+
+Insight yang dihasilkan dapat digunakan sebagai dasar pengambilan keputusan bisnis yang lebih efektif.
