@@ -449,24 +449,30 @@ Contoh kelompok umur:
 
 ---
 
-## 6. Market Basket Analysis
+# 6. Market Basket Analysis
 
-Market Basket Analysis digunakan untuk menemukan pola pembelian produk yang sering dibeli bersamaan.
+Market Basket Analysis merupakan teknik analisis data yang digunakan untuk menemukan pola pembelian produk yang sering dibeli secara bersamaan dalam satu transaksi.
 
-Metode yang digunakan:
+Analisis ini bertujuan untuk memahami hubungan antar produk yang dibeli oleh pelanggan sehingga perusahaan dapat mengidentifikasi kombinasi produk yang sering muncul dalam satu keranjang belanja.
 
-Association Rule Mining
+Dengan memahami pola pembelian tersebut, perusahaan dapat mengembangkan berbagai strategi bisnis seperti:
 
-Algoritma:
+- strategi **cross-selling**
+- penempatan produk yang lebih efektif di toko
+- pembuatan paket promosi produk
+- rekomendasi produk kepada pelanggan
 
-- Apriori
-- FP-Growth
+Market Basket Analysis memanfaatkan data transaksi pada tabel **fact_transaction_detail**, dimana setiap transaksi dapat berisi lebih dari satu produk yang dibeli oleh pelanggan.
 
-Metrics yang digunakan:
+---
 
-- Support
-- Confidence
-- Lift
+## Metode yang Digunakan
+
+Metode yang digunakan dalam analisis ini adalah **Association Rule Mining**.
+
+Association Rule Mining merupakan metode dalam data mining yang digunakan untuk menemukan hubungan atau asosiasi antara item yang sering muncul bersama dalam suatu dataset transaksi.
+
+Hasil dari metode ini berupa **association rules**, yaitu aturan yang menunjukkan hubungan antara dua atau lebih produk dalam bentuk:
 
 ---
 
