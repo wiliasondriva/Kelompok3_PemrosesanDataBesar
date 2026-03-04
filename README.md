@@ -464,9 +464,7 @@ Dengan memahami pola pembelian tersebut, perusahaan dapat mengembangkan berbagai
 
 Market Basket Analysis memanfaatkan data transaksi pada tabel **fact_transaction_detail**, dimana setiap transaksi dapat berisi lebih dari satu produk yang dibeli oleh pelanggan.
 
----
-
-## Metode yang Digunakan
+#### Metode yang Digunakan
 
 Metode yang digunakan dalam analisis ini adalah **Association Rule Mining**.
 
