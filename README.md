@@ -12,7 +12,7 @@ Dashboard ini membantu memahami performa penjualan, performa toko, perilaku pela
 
 # Dataset
 
-Dataset yang digunakan dalam analisis ini merupakan data transaksi retail yang telah dimodelkan menggunakan pendekatan **star schema** dalam data warehouse.
+Dataset yang digunakan merupakan dataset gabungan yang disusun khusus untuk keperluan pembelajaran. Data diperoleh melalui proses web scraping dari Alfagift, serta dilengkapi data bangkitan sintetik untuk memperkaya struktur dan kompleksitas kasus. Seluruh data tidak dimaksudkan untuk merepresentasikan kondisi aktual secara akurat, tidak digunakan untuk tujuan komersial, dan tidak mencerminkan data resmi dari pihak terkait.
 
 Dataset terdiri dari beberapa tabel utama yang terbagi menjadi **fact table** dan **dimension table**.
 
