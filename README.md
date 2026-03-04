@@ -125,80 +125,327 @@ Tabel ini digunakan untuk analisis kontribusi penjualan berdasarkan kategori pro
 
 ## 1. Sales Performance
 
-Analisis ini bertujuan untuk melihat tren penjualan dari waktu ke waktu.
+Analisis ini bertujuan untuk memahami kinerja penjualan secara keseluruhan dan tren penjualan dari waktu ke waktu. Analisis ini sangat penting karena memberikan gambaran awal mengenai kondisi bisnis secara umum.
 
-Visualisasi yang digunakan:
+### Analisis yang dilakukan
 
-- Line Chart : Penjualan per waktu
-- Bar Chart : Penjualan per store
-- Donut Chart : Kontribusi store terhadap total revenue
-- Bar Chart : Penjualan berdasarkan kota
+### Penjualan per Waktu
 
-Tujuan analisis:
+Menampilkan tren penjualan berdasarkan waktu (harian atau bulanan).
 
-- Mengidentifikasi tren penjualan
+**Visualisasi:** Line Chart
+
+**Tujuan:**
+
+- Mengidentifikasi tren kenaikan atau penurunan penjualan
+- Mengetahui pola musiman penjualan
+- Mengidentifikasi periode dengan penjualan tertinggi
+
+---
+### Penjualan per Store
+
+Membandingkan total penjualan antar toko.
+
+**Visualisasi:** Bar Chart
+
+**Tujuan:**
+
 - Mengetahui toko dengan performa terbaik
-- Mengetahui wilayah dengan penjualan tertinggi
+- Mengidentifikasi toko dengan performa rendah
+- Mengevaluasi distribusi penjualan antar toko
 
+---
+
+### Kontribusi Store terhadap Revenue
+
+Menunjukkan kontribusi masing-masing toko terhadap total revenue.
+
+**Visualisasi:** Donut Chart
+
+**Tujuan:**
+
+- Mengetahui toko dengan kontribusi terbesar
+- Memahami distribusi revenue antar toko
+
+---
+
+### Penjualan Berdasarkan Kota
+
+Menampilkan distribusi penjualan berdasarkan kota pelanggan.
+
+**Visualisasi:** Bar Chart
+
+**Tujuan:**
+
+- Mengidentifikasi wilayah dengan penjualan tertinggi
+- Mengetahui potensi pasar di masing-masing wilayah
+  
 ---
 
 ## 2. Store Performance
 
-Analisis ini digunakan untuk membandingkan performa antar toko.
+Analisis ini bertujuan untuk membandingkan performa masing-masing toko secara lebih detail.
 
-Visualisasi:
+### Analisis yang dilakukan
 
-- Revenue per store
-- Transaksi per store
-- Average order value per store
-- Ranking store berdasarkan revenue
+### Revenue per Store
 
-Tujuan:
+Menampilkan total revenue yang dihasilkan oleh setiap toko.
 
-Mengetahui toko dengan performa penjualan terbaik dan mengidentifikasi toko yang perlu ditingkatkan performanya.
+**Tujuan:**
 
----
-
-## 3. Product Analysis
-
-Analisis ini berfokus pada performa produk.
-
-Visualisasi:
-
-- Top 10 produk terlaris
-- Distribusi harga produk
-- Hubungan harga dan jumlah penjualan
-- Brand performance
-
-Tujuan:
-
-Mengidentifikasi produk yang paling berkontribusi terhadap penjualan.
+- Mengidentifikasi toko dengan kontribusi revenue terbesar
+- Mengevaluasi performa toko secara individual
 
 ---
 
-## 4. Category Analysis
+### Jumlah Transaksi per Store
+
+Menunjukkan jumlah transaksi pada setiap toko.
+
+**Tujuan:**
+
+- Mengetahui tingkat aktivitas transaksi
+- Membandingkan tingkat kunjungan antar toko
+
+---
+
+### Average Order Value per Store
+
+Average Order Value (AOV) menunjukkan nilai rata-rata transaksi pada setiap toko.
+
+**Tujuan:**
+
+- Menilai kualitas transaksi pada setiap toko
+- Mengetahui apakah toko menghasilkan transaksi bernilai tinggi
+
+---
+
+### Ranking Store
+
+Mengurutkan toko berdasarkan total revenue.
+
+**Tujuan:**
+
+- Mengidentifikasi toko dengan performa terbaik
+- Menentukan benchmark performa toko
+
+---
+
+# 3. Product Analysis
+
+Analisis produk bertujuan untuk memahami performa masing-masing produk dalam menghasilkan penjualan.  
+Melalui analisis ini dapat diketahui produk mana yang paling diminati pelanggan serta bagaimana distribusi harga produk dalam sistem.
+
+Analisis ini membantu perusahaan dalam menentukan strategi seperti pengelolaan stok, promosi produk, serta penentuan harga.
+
+## Analisis yang dilakukan
+
+### Top 10 Produk Terlaris
+
+Menampilkan sepuluh produk dengan jumlah penjualan tertinggi berdasarkan data transaksi.
+
+Visualisasi ini membantu mengidentifikasi produk yang paling sering dibeli oleh pelanggan.
+
+**Tujuan:**
+
+- Mengidentifikasi produk yang paling diminati pelanggan
+- Menentukan produk unggulan bisnis
+- Membantu perencanaan stok produk
+- Menentukan produk yang dapat dijadikan fokus promosi
+
+---
+
+### Top 10 Produk Berdasarkan Revenue
+
+Menampilkan sepuluh produk yang menghasilkan total pendapatan terbesar.
+
+Berbeda dengan jumlah unit terjual, analisis ini menekankan pada kontribusi produk terhadap total revenue.
+
+**Tujuan:**
+
+- Mengidentifikasi produk dengan kontribusi revenue terbesar
+- Mengetahui produk dengan nilai penjualan tinggi
+- Membantu menentukan strategi pricing produk
+
+---
+
+### Distribusi Harga Produk
+
+Menampilkan sebaran harga produk yang tersedia dalam dataset.
+
+Visualisasi distribusi harga membantu memahami bagaimana variasi harga produk yang dijual dalam sistem.
+
+**Tujuan:**
+
+- Memahami rentang harga produk yang dijual
+- Mengidentifikasi segmen harga produk
+- Melihat apakah mayoritas produk berada pada kategori harga tertentu
+
+---
+
+### Hubungan Harga Produk dan Jumlah Terjual
+
+Analisis ini menunjukkan hubungan antara harga produk dan jumlah unit yang terjual.
+
+Dengan menggunakan visualisasi scatter plot, dapat dilihat apakah produk dengan harga rendah lebih sering dibeli dibandingkan produk dengan harga tinggi.
+
+**Tujuan:**
+
+- Memahami hubungan antara harga dan permintaan produk
+- Mengidentifikasi apakah harga mempengaruhi tingkat penjualan
+- Membantu menentukan strategi penetapan harga
+
+---
+
+### Brand Performance
+
+Analisis ini menampilkan performa penjualan berdasarkan brand atau merek produk.
+
+Dengan menganalisis kontribusi brand terhadap total penjualan, perusahaan dapat mengetahui brand mana yang memiliki performa terbaik.
+
+**Tujuan:**
+
+- Mengidentifikasi brand dengan penjualan tertinggi
+- Membantu strategi kerja sama dengan brand tertentu
+- Menentukan brand yang perlu mendapatkan perhatian lebih dalam strategi pemasaran
+
+---
+
+# 4. Category Analysis
 
 Analisis kategori produk digunakan untuk mengetahui kontribusi setiap kategori terhadap total penjualan.
 
-Visualisasi:
+Dengan analisis ini dapat diketahui kategori produk mana yang paling berkontribusi terhadap revenue dan kategori mana yang paling sering dibeli oleh pelanggan.
 
-- Revenue per kategori
-- Kontribusi kategori
-- Transaksi per kategori
-- Average transaction value per kategori
+## Analisis yang dilakukan
+
+### Revenue per Kategori
+
+Menampilkan total revenue yang dihasilkan oleh masing-masing kategori produk.
+
+Visualisasi ini membantu memahami kategori produk yang memberikan kontribusi terbesar terhadap pendapatan bisnis.
+
+**Tujuan:**
+
+- Mengidentifikasi kategori produk dengan revenue tertinggi
+- Menentukan kategori utama dalam bisnis
+- Membantu pengambilan keputusan terkait pengelolaan kategori produk
 
 ---
 
-## 5. Customer Analysis
+### Kontribusi Kategori
 
-Analisis pelanggan bertujuan memahami perilaku pelanggan.
+Menunjukkan persentase kontribusi masing-masing kategori terhadap total revenue.
 
-Visualisasi:
+Analisis ini memberikan gambaran distribusi pendapatan berdasarkan kategori produk.
 
-- Jumlah customer aktif
-- Revenue per customer
-- Revenue berdasarkan gender
-- Customer berdasarkan kelompok umur
+**Tujuan:**
+
+- Memahami distribusi penjualan antar kategori
+- Mengetahui kategori yang mendominasi penjualan
+- Mengidentifikasi kategori dengan kontribusi rendah
+
+---
+
+### Jumlah Transaksi per Kategori
+
+Menampilkan jumlah transaksi yang melibatkan produk dari setiap kategori.
+
+Analisis ini membantu memahami kategori produk yang paling sering dibeli oleh pelanggan.
+
+**Tujuan:**
+
+- Mengidentifikasi kategori produk dengan frekuensi pembelian tinggi
+- Mengetahui kategori yang paling populer di kalangan pelanggan
+- Membantu strategi promosi berdasarkan kategori
+
+---
+
+### Average Transaction Value per Kategori
+
+Average Transaction Value (ATV) menunjukkan rata-rata nilai transaksi yang melibatkan produk dari kategori tertentu.
+
+Analisis ini membantu memahami nilai transaksi rata-rata yang dihasilkan oleh masing-masing kategori.
+
+**Tujuan:**
+
+- Mengidentifikasi kategori dengan nilai transaksi tinggi
+- Mengetahui kategori yang cenderung menghasilkan pembelian bernilai besar
+- Membantu menentukan strategi pengembangan kategori produk
+
+---
+
+# 5. Customer Analysis
+
+Analisis pelanggan bertujuan untuk memahami perilaku pelanggan dalam melakukan transaksi.  
+Melalui analisis ini dapat diketahui karakteristik pelanggan, kontribusi pelanggan terhadap revenue, serta segmentasi pelanggan berdasarkan gender dan kelompok umur.
+
+Analisis pelanggan sangat penting karena membantu bisnis memahami siapa pelanggan utama mereka dan bagaimana pola pembelian pelanggan tersebut.
+
+## Analisis yang dilakukan
+
+### Jumlah Customer Aktif
+
+Menampilkan jumlah pelanggan unik yang melakukan transaksi dalam dataset.
+
+Analisis ini dihitung berdasarkan jumlah **customer_id unik** yang muncul dalam data transaksi.
+
+**Tujuan:**
+
+- Mengetahui jumlah pelanggan aktif yang melakukan pembelian
+- Mengukur ukuran basis pelanggan dalam bisnis
+- Mengetahui tingkat partisipasi pelanggan dalam transaksi
+
+---
+
+### Revenue per Customer
+
+Menampilkan kontribusi revenue yang dihasilkan oleh masing-masing pelanggan.
+
+Melalui analisis ini dapat diketahui pelanggan dengan nilai pembelian tertinggi.
+
+**Tujuan:**
+
+- Mengidentifikasi pelanggan dengan kontribusi revenue terbesar
+- Mengetahui pelanggan dengan nilai transaksi tinggi
+- Membantu mengidentifikasi pelanggan yang berpotensi menjadi pelanggan loyal
+
+---
+
+### Revenue berdasarkan Gender
+
+Menunjukkan distribusi revenue berdasarkan gender pelanggan.
+
+Analisis ini membantu memahami segmen pelanggan yang memberikan kontribusi terbesar terhadap penjualan.
+
+**Tujuan:**
+
+- Mengetahui distribusi pelanggan berdasarkan gender
+- Mengidentifikasi gender dengan kontribusi revenue terbesar
+- Membantu memahami segmentasi pasar berdasarkan gender
+
+---
+
+### Customer berdasarkan Kelompok Umur
+
+Analisis ini mengelompokkan pelanggan berdasarkan umur yang dihitung dari atribut **birth_date**.
+
+Pelanggan dikelompokkan ke dalam beberapa kategori umur untuk memahami demografi pelanggan.
+
+Contoh kelompok umur:
+
+- < 20 tahun
+- 20 – 30 tahun
+- 30 – 40 tahun
+- 40 – 50 tahun
+- > 50 tahun
+
+**Tujuan:**
+
+- Memahami distribusi pelanggan berdasarkan umur
+- Mengidentifikasi kelompok umur dengan kontribusi penjualan terbesar
+- Membantu menentukan strategi pemasaran berdasarkan segmen umur
 
 ---
 
