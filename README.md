@@ -121,53 +121,6 @@ Tabel ini digunakan untuk analisis kontribusi penjualan berdasarkan kategori pro
 
 ---
 
-# KPI Dashboard
-
-Dashboard menampilkan beberapa KPI utama untuk memonitor performa bisnis.
-
-### Total Revenue
-Total pendapatan yang dihasilkan dari seluruh transaksi.
-
-Rumus:
-SUM(line_total)
-
----
-
-### Total Transactions
-Jumlah transaksi yang terjadi.
-
-Rumus:
-COUNT(DISTINCT invoice_id)
-
----
-
-### Average Order Value (AOV)
-
-Rata-rata nilai transaksi pelanggan.
-
-Rumus:
-SUM(line_total) / COUNT(DISTINCT invoice_id)
-
----
-
-### Total Active Customers
-
-Jumlah customer yang melakukan transaksi.
-
-Rumus:
-COUNT(DISTINCT customer_id)
-
----
-
-### Total Products
-
-Jumlah produk unik yang tersedia.
-
-Rumus:
-COUNT(DISTINCT product_id)
-
----
-
 # Dashboard Analysis
 
 ## 1. Sales Performance
