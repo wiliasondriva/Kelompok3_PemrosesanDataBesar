@@ -9,6 +9,7 @@ library(scales)
 library(fresh)
 library(ggplot2)
 library(gridExtra)
+
 # ── DB Connection ────────────────────────────────────────────────────────────
 
 con <- dbConnect(
@@ -19,8 +20,6 @@ con <- dbConnect(
   user = "root",
   password = ""
 )
-
-
 
 # ── Helper Functions ─────────────────────────────────────────────────────────
 build_where <- function(date_start, date_end, province = "all", store_type = "all") {
