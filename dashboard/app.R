@@ -8,8 +8,8 @@ library(RMySQL)
 library(dplyr)
 library(lubridate)
 library(scales)
+library(gridExtra)
 
-rm(list = ls())
 source("ui.R")
 source("server.R")
 
