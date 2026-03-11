@@ -2,7 +2,7 @@
 
 Dashboard interaktif untuk menganalisis performa penjualan retail menggunakan data transaksi yang dikumpulkan melalui proses web scraping dan data sintetik.
 
-![Retail Dashboard Illustration](assets/Welcome Github.png)
+![Retail Dashboard Illustration](assets/opening.png)
 
 
 ---
