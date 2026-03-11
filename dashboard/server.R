@@ -1,108 +1,3 @@
-# ── DB Connection ────────────────────────────────────────────────────────────
-con <- dbConnect(
-  RMySQL::MySQL(),
-  host     = "localhost",
-  dbname   = "retaildatabase",
-  user     = "root",
-  password = "",
-  port     = 3306
-)
-
-# ── Helper Functions ─────────────────────────────────────────────────────────
-
-# ── DB Connection ────────────────────────────────────────────────────────────
-
-con <- dbConnect(
-  RMySQL::MySQL(),
-  dbname = "retaildatabase",
-  host = "127.0.0.1",
-  port = 3306,
-  user = "root",
-  password = ""
-)
-
-
-
-# ── Helper Functions ─────────────────────────────────────────────────────────
-build_where <- function(date_start, date_end, province = "all", store_type = "all") {
-  clauses <- c(sprintf("DATE(ft.invoice_datetime) BETWEEN '%s' AND '%s'", date_start, date_end))
-  if (!is.null(province)   && province   != "all") clauses <- c(clauses, sprintf("ds.store_province = '%s'", province))
-  if (!is.null(store_type) && store_type != "all") clauses <- c(clauses, sprintf("ds.store_type = '%s'", store_type))
-  paste("WHERE", paste(clauses, collapse = " AND "))
-}
-
-build_where_cust <- function(date_start, date_end, province = "all",
-                             store_type = "all", city = "all") {
-  clauses <- c(sprintf("DATE(ft.invoice_datetime) BETWEEN '%s' AND '%s'", date_start, date_end))
-  if (!is.null(province)   && province   != "all") clauses <- c(clauses, sprintf("ds.store_province = '%s'", province))
-  if (!is.null(store_type) && store_type != "all") clauses <- c(clauses, sprintf("ds.store_type = '%s'", store_type))
-  if (!is.null(city)       && city       != "all") clauses <- c(clauses, sprintf("dc.customer_city = '%s'", city))
-  paste("WHERE", paste(clauses, collapse = " AND "))
-}
-
-fmt_rupiah <- function(x) {
-  if (is.na(x) || is.null(x)) return("Rp 0")
-  x <- as.numeric(x)
-  if (x >= 1e9) return(paste0("Rp ", round(x/1e9,2), "B"))
-  if (x >= 1e6) return(paste0("Rp ", round(x/1e6,2), "M"))
-  if (x >= 1e3) return(paste0("Rp ", round(x/1e3,1), "K"))
-  paste0("Rp ", scales::comma(x))
-}
-
-fmt_num <- function(x) {
-  if (is.na(x) || is.null(x)) return("0")
-  x <- as.numeric(x)
-  if (x >= 1e6) return(paste0(round(x/1e6,2), "M"))
-  if (x >= 1e3) return(paste0(round(x/1e3,1), "K"))
-  scales::comma(x)
-}
-
-prev_period <- function(date_start, date_end) {
-  start <- as.Date(date_start); end <- as.Date(date_end)
-  dur   <- as.numeric(end - start)
-  list(start = as.character(start - dur - 1), end = as.character(end - dur - 1))
-}
-
-pct_badge <- function(current, previous) {
-  current <- as.numeric(current); previous <- as.numeric(previous)
-  if (is.na(previous) || is.null(previous) || previous == 0)
-    return(list(text = "N/A", color = "#94A3B8", arrow = "\u2022"))
-  pct <- (current - previous) / abs(previous) * 100
-  list(text  = sprintf("%.1f%%", abs(pct)),
-       color = if (pct >= 0) "#10B981" else "#EF4444",
-       arrow = if (pct >= 0) "\u25b2" else "\u25bc",
-       pct   = pct)
-}
-
-query_kpi_val <- function(where_clause, kpi) {
-  need_detail <- kpi %in% c("revenue", "items_sold", "basket", "aov")
-  join_detail <- if (need_detail) "JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id" else ""
-  select_col  <- switch(kpi,
-                        "revenue"      = "SUM(ftd.product_price * ftd.quantity)",
-                        "transaction"  = "COUNT(DISTINCT ft.invoice_id)",
-                        "items_sold"   = "SUM(ftd.quantity)",
-                        "basket"       = "ROUND(SUM(ftd.quantity) / COUNT(DISTINCT ft.invoice_id), 2)",
-                        "aov"          = "ROUND(SUM(ftd.product_price * ftd.quantity) / COUNT(DISTINCT ft.invoice_id), 0)",
-                        "active_store" = "COUNT(DISTINCT ft.store_id)"
-  )
-  sql <- sprintf("SELECT %s AS val FROM fact_transaction ft %s JOIN dim_store ds ON ft.store_id = ds.store_id %s",
-                 select_col, join_detail, where_clause)
-  as.numeric(dbGetQuery(con, sql)$val[1])
-}
-
-make_subtitle <- function(label, badge) {
-  tagList(
-    tags$div(style = "font-size:13px; opacity:0.9;", label),
-    tags$div(
-      style = paste0("display:inline-flex; align-items:center; gap:3px; margin-top:4px; ",
-                     "font-size:16px; font-weight:700; background:rgba(0,0,0,0.25)",
-                     "color:white", badge$color, "; padding:2px 8px; border-radius:20px;"),
-      badge$arrow, " ", badge$text,
-      tags$span(style = "font-weight:400; font-size:16px; opacity:0.8; margin-left:2px;", "vs prev period")
-    )
-  )
-}
-
 # =============================================================================
 server <- function(input, output, session) {
   
@@ -180,28 +75,28 @@ server <- function(input, output, session) {
   output$total_revenue <- renderbs4ValueBox({
     cur <- query_kpi_val(base_query()$where, "revenue")
     prev <- query_kpi_val(prev_where(), "revenue")
-    bs4ValueBox(value = fmt_rupiah(cur), subtitle = make_subtitle("Total Revenue", pct_badge(cur, prev)),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;", fmt_rupiah(cur)), subtitle = make_subtitle("Total Revenue", pct_badge(cur, prev)),
                 icon = icon("money-bill-wave"), color = "success", width = 12)
   })
   
   output$total_transaction <- renderbs4ValueBox({
     cur <- query_kpi_val(base_query()$where, "transaction")
     prev <- query_kpi_val(prev_where(), "transaction")
-    bs4ValueBox(value = fmt_num(cur), subtitle = make_subtitle("Total Transactions", pct_badge(cur, prev)),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;",fmt_num(cur)), subtitle = make_subtitle("Total Transactions", pct_badge(cur, prev)),
                 icon = icon("receipt"), color = "primary", width = 12)
   })
   
   output$total_items_sold <- renderbs4ValueBox({
     cur <- query_kpi_val(base_query()$where, "items_sold")
     prev <- query_kpi_val(prev_where(), "items_sold")
-    bs4ValueBox(value = fmt_num(cur), subtitle = make_subtitle("Total Items Sold", pct_badge(cur, prev)),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;", fmt_num(cur)), subtitle = make_subtitle("Total Items Sold", pct_badge(cur, prev)),
                 icon = icon("box-open"), color = "info", width = 12)
   })
   
   output$avg_basket <- renderbs4ValueBox({
     cur <- query_kpi_val(base_query()$where, "basket")
     prev <- query_kpi_val(prev_where(), "basket")
-    bs4ValueBox(value = ifelse(is.na(cur), "0", round(cur, 2)),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;",ifelse(is.na(cur), "0", round(cur, 2))),
                 subtitle = make_subtitle("Avg Basket Size", pct_badge(cur, prev)),
                 icon = icon("shopping-basket"), color = "warning", width = 12)
   })
@@ -209,14 +104,14 @@ server <- function(input, output, session) {
   output$avg_aov <- renderbs4ValueBox({
     cur <- query_kpi_val(base_query()$where, "aov")
     prev <- query_kpi_val(prev_where(), "aov")
-    bs4ValueBox(value = fmt_rupiah(cur), subtitle = make_subtitle("Avg Order Value", pct_badge(cur, prev)),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;", fmt_rupiah(cur)), subtitle = make_subtitle("Avg Order Value", pct_badge(cur, prev)),
                 icon = icon("chart-bar"), color = "danger", width = 12)
   })
   
   output$active_store <- renderbs4ValueBox({
     cur <- query_kpi_val(base_query()$where, "active_store")
     prev <- query_kpi_val(prev_where(), "active_store")
-    bs4ValueBox(value = as.integer(cur), subtitle = make_subtitle("Active Stores", pct_badge(cur, prev)),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;", as.integer(cur)), subtitle = make_subtitle("Active Stores", pct_badge(cur, prev)),
                 icon = icon("store"), color = "secondary", width = 12)
   })
   
@@ -443,7 +338,8 @@ server <- function(input, output, session) {
     prv <- as.numeric(dbGetQuery(con, sprintf(
       "SELECT COUNT(DISTINCT ft.store_id) AS val
        FROM fact_transaction ft JOIN dim_store ds ON ft.store_id = ds.store_id %s", sq$where_prev))$val)
-    bs4ValueBox(value = as.integer(cur), subtitle = make_subtitle("Active Stores", pct_badge(cur, prv)),
+    bs4ValueBox(value = tags$span(style="font-size:30px; font-weight:bold;", as.integer(cur)),
+                subtitle = make_subtitle("Active Stores", pct_badge(cur, prv)),
                 icon = icon("store"), color = "primary")
   })
   
@@ -456,7 +352,7 @@ server <- function(input, output, session) {
        JOIN dim_store ds ON ft.store_id = ds.store_id %s
        GROUP BY ft.store_id, ds.store_name ORDER BY val DESC LIMIT 1", sq$where))
     bs4ValueBox(
-      value    = fmt_rupiah(res$val),
+      value = tags$span(style="font-size:30px; font-weight:bold;",fmt_rupiah(res$val)),
       subtitle = tagList(
         tags$div(style="font-size:18px; opacity:0.9;", "Top Store Revenue"),
         tags$div(style="font-size:15px; opacity:0.7; margin-top:2px;",
@@ -475,7 +371,8 @@ server <- function(input, output, session) {
          GROUP BY ft.store_id) t", w)
     cur <- as.numeric(dbGetQuery(con, aov_sql(sq$where))$val)
     prv <- as.numeric(dbGetQuery(con, aov_sql(sq$where_prev))$val)
-    bs4ValueBox(value = fmt_rupiah(cur), subtitle = make_subtitle("Avg AOV per Store", pct_badge(cur, prv)),
+    bs4ValueBox(value = tags$span(style="font-size:30px; font-weight:bold;", fmt_rupiah(cur)),
+                subtitle = make_subtitle("Avg AOV per Store", pct_badge(cur, prv)),
                 icon = icon("chart-bar"), color = "warning", width = 12)
   })
   
@@ -629,21 +526,24 @@ server <- function(input, output, session) {
   output$prod_total <- renderbs4ValueBox({
     n <- as.numeric(dbGetQuery(con,
                                "SELECT COUNT(DISTINCT product_id) AS val FROM dim_product WHERE product_id > 0")$val)
-    bs4ValueBox(value=fmt_num(n), subtitle=tags$div(style="font-size:13px;opacity:0.9;","Total Products"),
+    bs4ValueBox(value = tags$span(style = "font-size:30px; font-weight:bold;", fmt_num(n)),
+                subtitle=tags$div(style="font-size:16px;opacity:0.9;","Total Products"),
                 icon=icon("box"), color="primary", width=12)
   })
   
   output$prod_brand <- renderbs4ValueBox({
     n <- as.numeric(dbGetQuery(con,
                                "SELECT COUNT(DISTINCT brand) AS val FROM dim_product WHERE product_id > 0")$val)
-    bs4ValueBox(value=fmt_num(n), subtitle=tags$div(style="font-size:13px;opacity:0.9;","Total Brands"),
+    bs4ValueBox(value = tags$span(style = "font-size:30px; font-weight:bold;", fmt_num(n)),
+                subtitle=tags$div(style="font-size:16px;opacity:0.9;","Total Brands"),
                 icon=icon("tag"), color="success", width=12)
   })
   
   output$prod_kategori <- renderbs4ValueBox({
     n <- as.numeric(dbGetQuery(con,
                                "SELECT COUNT(DISTINCT category_lvl1) AS val FROM dim_category WHERE category_id > 0")$val)
-    bs4ValueBox(value=fmt_num(n), subtitle=tags$div(style="font-size:13px;opacity:0.9;","Total Categories"),
+    bs4ValueBox(value = tags$span(style = "font-size:30px; font-weight:bold;", fmt_num(n)),
+                subtitle=tags$div(style="font-size:16px;opacity:0.9;","Total Categories"),
                 icon=icon("list"), color="warning", width=12)
   })
   
@@ -827,7 +727,8 @@ server <- function(input, output, session) {
        FROM fact_transaction ft JOIN dim_store ds ON ft.store_id=ds.store_id
        JOIN dim_customer dc ON ft.customer_id=dc.customer_id
        %s AND ft.customer_id > 0", cf$where_prev))$val)
-    bs4ValueBox(value=fmt_num(cur), subtitle=make_subtitle("Total Active Customers", pct_badge(cur, prv)),
+    bs4ValueBox(value = tags$span(style="font-size:25px; font-weight:bold;",fmt_num(cur)),
+                subtitle=make_subtitle("Total Active Customers", pct_badge(cur, prv)),
                 icon=icon("users"), color="primary", width=12)
   })
   
@@ -843,7 +744,8 @@ server <- function(input, output, session) {
        FROM fact_transaction ft JOIN dim_store ds ON ft.store_id=ds.store_id
        JOIN dim_customer dc ON ft.customer_id=dc.customer_id
        %s AND ft.customer_id > 0 AND dc.gender = 'P'", cf$where_prev))$val)
-    bs4ValueBox(value=fmt_num(cur), subtitle=make_subtitle("Female Customers", pct_badge(cur, prv)),
+    bs4ValueBox(value = tags$span(style="font-size:25px; font-weight:bold;",fmt_num(cur)),
+                subtitle=make_subtitle("Female Customers", pct_badge(cur, prv)),
                 icon=icon("female"), color="danger", width=12)
   })
   
@@ -859,7 +761,8 @@ server <- function(input, output, session) {
        FROM fact_transaction ft JOIN dim_store ds ON ft.store_id=ds.store_id
        JOIN dim_customer dc ON ft.customer_id=dc.customer_id
        %s AND ft.customer_id > 0 AND dc.gender = 'L'", cf$where_prev))$val)
-    bs4ValueBox(value=fmt_num(cur), subtitle=make_subtitle("Male Customers", pct_badge(cur, prv)),
+    bs4ValueBox(value = tags$span(style="font-size:25px; font-weight:bold;",fmt_num(cur)),
+                subtitle=make_subtitle("Male Customers", pct_badge(cur, prv)),
                 icon=icon("male"), color="info", width=12)
   })
   
@@ -882,7 +785,8 @@ server <- function(input, output, session) {
     }
     cur <- as.numeric(dbGetQuery(con, avg_sql(cf$where))$val)
     prv <- as.numeric(dbGetQuery(con, avg_sql(cf$where_prev))$val)
-    bs4ValueBox(value=fmt_rupiah(cur), subtitle=make_subtitle("Avg First Purchase", pct_badge(cur, prv)),
+    bs4ValueBox(value = tags$span(style="font-size:25px; font-weight:bold;",fmt_rupiah(cur)),
+                subtitle=make_subtitle("Avg First Purchase", pct_badge(cur, prv)),
                 icon=icon("tag"), color="warning", width=12)
   })
   
@@ -897,7 +801,7 @@ server <- function(input, output, session) {
        %s AND ft.customer_id > 0", cf$where))$val)
     pct <- if (!is.na(n_all) && n_all > 0) round(n_new / n_all * 100, 1) else 0
     bs4ValueBox(
-      value    = paste0(pct, "%"),
+      value = tags$span(style="font-size:30px; font-weight:bold;", paste0(pct, "%")),
       subtitle = tagList(
         tags$div(style="font-size:13px; opacity:0.9;", "New Customer Ratio"),
         tags$div(style="font-size:20px; opacity:0.7; margin-top:2px;",
@@ -1187,48 +1091,47 @@ server <- function(input, output, session) {
   # ── KPI: Member ───────────────────────────────────────────────────────────
   output$basket_kpi_trx_member <- renderbs4ValueBox({
     d <- basket_stats(); m <- d[d$customer_type == "Member", ]
-    bs4ValueBox(value = if (nrow(m) > 0) fmt_num(m$total_trx) else "0",
-                subtitle = tags$div(style="font-size:13px;opacity:0.9;", "Member Transactions"),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;", if (nrow(m) > 0) fmt_num(m$total_trx) else "0"),
+                subtitle = tags$div(style="font-size:16px;opacity:0.9;", "Member Transactions"),
                 icon = icon("id-card"), color = "primary", width = 12)
   })
   
   output$basket_kpi_items_member <- renderbs4ValueBox({
     d <- basket_stats(); m <- d[d$customer_type == "Member", ]
-    bs4ValueBox(value = if (nrow(m) > 0) m$avg_items else "0",
-                subtitle = tags$div(style="font-size:13px;opacity:0.9;", "Avg Items/Trx (Member)"),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;", if (nrow(m) > 0) m$avg_items else "0"),
+                subtitle = tags$div(style="font-size:16px;opacity:0.9;", "Avg Items/Trx (Member)"),
                 icon = icon("shopping-basket"), color = "primary", width = 12)
   })
   
   output$basket_kpi_val_member <- renderbs4ValueBox({
     d <- basket_stats(); m <- d[d$customer_type == "Member", ]
-    bs4ValueBox(value = if (nrow(m) > 0) fmt_rupiah(m$avg_trx_value) else "Rp 0",
-                subtitle = tags$div(style="font-size:13px;opacity:0.9;", "Avg Trx Value (Member)"),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;",if (nrow(m) > 0) fmt_rupiah(m$avg_trx_value) else "Rp 0"),
+                subtitle = tags$div(style="font-size:16px;opacity:0.9;", "Avg Trx Value (Member)"),
                 icon = icon("receipt"), color = "primary", width = 12)
   })
   
   # ── KPI: Non-Member ───────────────────────────────────────────────────────
   output$basket_kpi_trx_nonmember <- renderbs4ValueBox({
     d <- basket_stats(); n <- d[d$customer_type == "Non-Member", ]
-    bs4ValueBox(value = if (nrow(n) > 0) fmt_num(n$total_trx) else "0",
-                subtitle = tags$div(style="font-size:13px;opacity:0.9;", "Non-Member Transactions"),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;", if (nrow(n) > 0) fmt_num(n$total_trx) else "0"),
+                subtitle = tags$div(style="font-size:16px;opacity:0.9;", "Non-Member Transactions"),
                 icon = icon("user"), color = "success", width = 12)
   })
   
   output$basket_kpi_items_nonmember <- renderbs4ValueBox({
     d <- basket_stats(); n <- d[d$customer_type == "Non-Member", ]
-    bs4ValueBox(value = if (nrow(n) > 0) n$avg_items else "0",
-                subtitle = tags$div(style="font-size:13px;opacity:0.9;", "Avg Items/Trx (Non-Member)"),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;", if (nrow(n) > 0) n$avg_items else "0"),
+                subtitle = tags$div(style="font-size:16px;opacity:0.9;", "Avg Items/Trx (Non-Member)"),
                 icon = icon("shopping-basket"), color = "success", width = 12)
   })
   
   output$basket_kpi_val_nonmember <- renderbs4ValueBox({
     d <- basket_stats(); n <- d[d$customer_type == "Non-Member", ]
-    bs4ValueBox(value = if (nrow(n) > 0) fmt_rupiah(n$avg_trx_value) else "Rp 0",
-                subtitle = tags$div(style="font-size:13px;opacity:0.9;", "Avg Trx Value (Non-Member)"),
+    bs4ValueBox(value = tags$span(style="font-size:20px; font-weight:bold;",if (nrow(n) > 0) fmt_rupiah(n$avg_trx_value) else "Rp 0"),
+                subtitle = tags$div(style="font-size:16px;opacity:0.9;", "Avg Trx Value (Non-Member)"),
                 icon = icon("receipt"), color = "success", width = 12)
   })
   
-  # ── Helper: fetch member/nonmember trend data ────────────────────────────
   basket_trend_data <- reactive({
     bq      <- basket_query()
     fmt     <- date_fmt()
@@ -1291,53 +1194,6 @@ server <- function(input, output, session) {
              margin=list(t=10, b=50, l=60, r=20))
   })
   
-  # ── Helper: fetch category affinity data ──────────────────────────────────
-  affinity_data <- function(where_clause, is_member) {
-    cond      <- if (is_member) "ft.customer_id > 0" else "ft.customer_id = 0"
-    total_sub <- if (is_member) "customer_id > 0" else "customer_id = 0"
-    sql <- sprintf("
-      SELECT
-        CASE WHEN c1.category_lvl1 < c2.category_lvl1 THEN c1.category_lvl1 ELSE c2.category_lvl1 END AS cat_a,
-        CASE WHEN c1.category_lvl1 < c2.category_lvl1 THEN c2.category_lvl1 ELSE c1.category_lvl1 END AS cat_b,
-        COUNT(DISTINCT ftd1.invoice_id) AS freq
-      FROM fact_transaction_detail ftd1
-      JOIN fact_transaction_detail ftd2
-        ON ftd1.invoice_id = ftd2.invoice_id AND ftd1.product_id < ftd2.product_id
-      JOIN fact_transaction ft ON ftd1.invoice_id = ft.invoice_id
-      JOIN dim_store ds ON ft.store_id = ds.store_id
-      JOIN dim_product p1 ON ftd1.product_id = p1.product_id
-      JOIN dim_product p2 ON ftd2.product_id = p2.product_id
-      JOIN dim_category c1 ON p1.category_id = c1.category_id
-      JOIN dim_category c2 ON p2.category_id = c2.category_id
-      %s AND %s AND c1.category_lvl1 != c2.category_lvl1
-      GROUP BY
-        CASE WHEN c1.category_lvl1 < c2.category_lvl1 THEN c1.category_lvl1 ELSE c2.category_lvl1 END,
-        CASE WHEN c1.category_lvl1 < c2.category_lvl1 THEN c2.category_lvl1 ELSE c1.category_lvl1 END",
-                   where_clause, cond)
-    dbGetQuery(con, sql)
-  }
-  
-  # ── Helper: render heatmap from affinity data ─────────────────────────────
-  render_affinity_heatmap <- function(data, colorscale) {
-    if (nrow(data) == 0) return(plotly_empty())
-    cats  <- sort(unique(c(data$cat_a, data$cat_b)))
-    n     <- length(cats)
-    mat   <- matrix(NA_real_, nrow=n, ncol=n, dimnames=list(cats, cats))
-    for (i in seq_len(nrow(data))) {
-      mat[data$cat_a[i], data$cat_b[i]] <- data$freq[i]
-      mat[data$cat_b[i], data$cat_a[i]] <- data$freq[i]
-    }
-    plot_ly(x=cats, y=cats, z=mat, type="heatmap",
-            colorscale=colorscale,
-            hovertemplate="<b>%{x} + %{y}</b><br>Frequency: %{z:,}<extra></extra>",
-            showscale=TRUE) |>
-      layout(
-        xaxis=list(title="", tickangle=-40, showgrid=FALSE),
-        yaxis=list(title="", showgrid=FALSE, autorange="reversed"),
-        paper_bgcolor="transparent", plot_bgcolor="transparent",
-        margin=list(t=10, b=130, l=150, r=20)
-      )
-  }
   
   output$basket_heatmap_member <- renderPlotly({
     d <- affinity_data(basket_query()$where, is_member=TRUE)
@@ -1361,58 +1217,6 @@ server <- function(input, output, session) {
   observeEvent(input$toggle_sub_member,     { pairs_show_more$sub_member     <- !pairs_show_more$sub_member })
   observeEvent(input$toggle_sub_nonmember,  { pairs_show_more$sub_nonmember  <- !pairs_show_more$sub_nonmember })
   
-  # ── Helper: pairs query ───────────────────────────────────────────────────
-  get_pairs <- function(where_clause, is_member, type = "product", limit = 10) {
-    cond      <- if (is_member) "ft.customer_id > 0" else "ft.customer_id = 0"
-    total_sub <- if (is_member) "customer_id > 0"    else "customer_id = 0"
-    if (type == "product") {
-      col_a <- "CASE WHEN p1.product_name < p2.product_name THEN p1.product_name ELSE p2.product_name END"
-      col_b <- "CASE WHEN p1.product_name < p2.product_name THEN p2.product_name ELSE p1.product_name END"
-      extra_join <- ""
-      extra_filter <- ""
-      label_a <- "Product A"; label_b <- "Product B"
-    } else {
-      col_a <- "CASE WHEN c1.category_lvl2 < c2.category_lvl2 THEN c1.category_lvl2 ELSE c2.category_lvl2 END"
-      col_b <- "CASE WHEN c1.category_lvl2 < c2.category_lvl2 THEN c2.category_lvl2 ELSE c1.category_lvl2 END"
-      extra_join <- "JOIN dim_category c1 ON p1.category_id = c1.category_id
-      JOIN dim_category c2 ON p2.category_id = c2.category_id"
-      extra_filter <- "AND c1.category_lvl2 != c2.category_lvl2
-        AND c1.category_lvl2 IS NOT NULL AND c2.category_lvl2 IS NOT NULL"
-      label_a <- "Subcategory A"; label_b <- "Subcategory B"
-    }
-    sql <- sprintf("
-      SELECT %s AS col_a, %s AS col_b,
-             COUNT(DISTINCT ftd1.invoice_id) AS freq,
-             ROUND(COUNT(DISTINCT ftd1.invoice_id) * 100.0 /
-               (SELECT COUNT(DISTINCT invoice_id) FROM fact_transaction WHERE %s), 2) AS support_pct
-      FROM fact_transaction_detail ftd1
-      JOIN fact_transaction_detail ftd2
-        ON ftd1.invoice_id = ftd2.invoice_id AND ftd1.product_id < ftd2.product_id
-      JOIN fact_transaction ft ON ftd1.invoice_id = ft.invoice_id
-      JOIN dim_store ds ON ft.store_id = ds.store_id
-      JOIN dim_product p1 ON ftd1.product_id = p1.product_id
-      JOIN dim_product p2 ON ftd2.product_id = p2.product_id
-      %s
-      %s AND %s %s
-      GROUP BY %s, %s
-      HAVING freq >= 1
-      ORDER BY freq DESC LIMIT %d",
-                   col_a, col_b, total_sub, extra_join,
-                   where_clause, cond, extra_filter,
-                   col_a, col_b, limit)
-    data <- dbGetQuery(con, sql)
-    if (nrow(data) == 0) return(data.frame())
-    out <- data.frame(
-      Rank = paste0("#", seq_len(nrow(data))),
-      A    = data$col_a,
-      B    = data$col_b,
-      Freq = sapply(data$freq, fmt_num),
-      Supp = paste0(data$support_pct, "%"),
-      check.names = FALSE, stringsAsFactors = FALSE
-    )
-    names(out) <- c("Rank", label_a, label_b, "Frequency", "Support %")
-    out
-  }
   
   output$basket_pairs_member <- renderTable({
     lim <- if (pairs_show_more$prod_member) 20 else 5
