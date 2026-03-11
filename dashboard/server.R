@@ -10,11 +10,24 @@ con <- dbConnect(
 
 # ── Helper Functions ─────────────────────────────────────────────────────────
 
-build_where <- function(date_start, date_end, province = "all", store_type = "all", store_city = "all") {
+# ── DB Connection ────────────────────────────────────────────────────────────
+
+con <- dbConnect(
+  RMySQL::MySQL(),
+  dbname = "retaildatabase",
+  host = "127.0.0.1",
+  port = 3306,
+  user = "root",
+  password = ""
+)
+
+
+
+# ── Helper Functions ─────────────────────────────────────────────────────────
+build_where <- function(date_start, date_end, province = "all", store_type = "all") {
   clauses <- c(sprintf("DATE(ft.invoice_datetime) BETWEEN '%s' AND '%s'", date_start, date_end))
   if (!is.null(province)   && province   != "all") clauses <- c(clauses, sprintf("ds.store_province = '%s'", province))
   if (!is.null(store_type) && store_type != "all") clauses <- c(clauses, sprintf("ds.store_type = '%s'", store_type))
-  if (!is.null(store_city) && store_city != "all") clauses <- c(clauses, sprintf("ds.store_city = '%s'", store_city))
   paste("WHERE", paste(clauses, collapse = " AND "))
 }
 
@@ -82,38 +95,12 @@ make_subtitle <- function(label, badge) {
     tags$div(style = "font-size:13px; opacity:0.9;", label),
     tags$div(
       style = paste0("display:inline-flex; align-items:center; gap:3px; margin-top:4px; ",
-                     "font-size:12px; font-weight:700; background:rgba(255,255,255,0.2); ",
-                     "color:", badge$color, "; padding:2px 8px; border-radius:20px;"),
+                     "font-size:16px; font-weight:700; background:rgba(0,0,0,0.25)",
+                     "color:white", badge$color, "; padding:2px 8px; border-radius:20px;"),
       badge$arrow, " ", badge$text,
-      tags$span(style = "font-weight:400; font-size:10px; opacity:0.8; margin-left:2px;", "vs prev period")
+      tags$span(style = "font-weight:400; font-size:16px; opacity:0.8; margin-left:2px;", "vs prev period")
     )
   )
-}
-
-# ── Modal helper (full data table with DT) — lives outside server() ──────────
-show_modal <- function(title, data) {
-  showModal(modalDialog(
-    title     = title,
-    size      = "xl",
-    easyClose = TRUE,
-    footer    = modalButton("Close"),
-    DT::renderDT(
-      DT::datatable(
-        data,
-        rownames   = FALSE,
-        filter     = "top",
-        extensions = "Buttons",
-        options    = list(
-          pageLength = 25,
-          scrollX    = TRUE,
-          dom        = "Bfrtip",
-          buttons    = list("csv", "excel"),
-          language   = list(search = "Search:")
-        ),
-        class = "compact stripe hover"
-      )
-    )
-  ))
 }
 
 # =============================================================================
@@ -176,17 +163,17 @@ server <- function(input, output, session) {
   cust_date_fmt <- reactive({ if (cust_gran() == "daily") "%Y-%m-%d" else "%Y-%m" })
   
   first_trans_cte <- function(where_clause) {
-    paste0("
+    sprintf("
       WITH first_trans AS (
         SELECT ft.customer_id,
                MIN(ft.invoice_datetime) AS first_dt,
-               DATE_FORMAT(MIN(ft.invoice_datetime), '%Y-%m') AS first_month
+               DATE_FORMAT(MIN(ft.invoice_datetime), '%%Y-%%m') AS first_month
         FROM fact_transaction ft
         JOIN dim_store ds ON ft.store_id = ds.store_id
         JOIN dim_customer dc ON ft.customer_id = dc.customer_id
-        ", where_clause, " AND ft.customer_id > 0
+        %s AND ft.customer_id > 0
         GROUP BY ft.customer_id
-      )")
+      )", where_clause)
   }
   
   # ===================== SALES OVERVIEW — KPIs =========================================
@@ -332,15 +319,24 @@ server <- function(input, output, session) {
     merged$pct <- ifelse(is.na(merged$val_prev)|merged$val_prev==0, NA,
                          (merged$val-merged$val_prev)/abs(merged$val_prev)*100)
     fmt_val    <- if (kpi %in% c("revenue","aov")) sapply(merged$val, fmt_rupiah) else sapply(merged$val, fmt_num)
-    fmt_growth <- ifelse(is.na(merged$pct), "N/A",
-                         paste0(ifelse(merged$pct>=0,"\u25b2 ","\u25bc "), sprintf("%.1f%%",abs(merged$pct))))
+    fmt_growth <- ifelse(
+      is.na(merged$pct),
+      "N/A",
+      ifelse(
+        merged$pct >= 0,
+        paste0("<span style='color:#16A34A;font-weight:600;'>▲ ",
+               sprintf("%.1f%%",abs(merged$pct)),"</span>"),
+        paste0("<span style='color:#DC2626;font-weight:600;'>▼ ",
+               sprintf("%.1f%%",abs(merged$pct)),"</span>")
+      )
+    )
     kpi_label  <- list(revenue="Revenue", transaction="Transactions", items_sold="Items Sold",
                        basket="Avg Basket", aov="AOV")[[kpi]]
     out <- setNames(data.frame(paste0("#",seq_len(nrow(merged))), merged$store_name, fmt_val, fmt_growth,
                                check.names=FALSE, stringsAsFactors=FALSE),
                     c("Rank","Store",kpi_label,"Growth"))
     head(out, 10)
-  }, striped=TRUE, hover=TRUE, bordered=FALSE, spacing="s", width="100%", align="llrr")
+  }, striped=TRUE, hover=TRUE, bordered=FALSE, spacing="s", width="100%", align="llrr",sanitize.text.function = function(x) x)
   observeEvent(input$btn_modal_top_stores, {
     bq  <- base_query(); kpi <- active_kpi()
     need_detail <- kpi %in% c("revenue","items_sold","basket","aov")
@@ -371,10 +367,36 @@ server <- function(input, output, session) {
                          paste0(ifelse(merged$pct>=0,"▲ ","▼ "), sprintf("%.1f%%",abs(merged$pct))))
     kpi_label  <- list(revenue="Revenue", transaction="Transactions", items_sold="Items Sold",
                        basket="Avg Basket", aov="AOV")[[kpi]]
-    show_modal("All Stores Ranking", setNames(data.frame(
-      paste0("#",seq_len(nrow(merged))), merged$store_name, fmt_val, fmt_growth,
-      check.names=FALSE, stringsAsFactors=FALSE),
-      c("Rank","Store",kpi_label,"Growth")))
+    showModal(
+      modalDialog(
+        title = "All Stores Ranking",
+        size = "l",
+        DTOutput("table_all_store"),
+        easyClose = TRUE,
+        footer = modalButton("Close")
+      )
+    )
+    
+    output$table_all_store <- renderDT({
+      
+      datatable(
+        setNames(
+          data.frame(
+            Rank  = paste0("#", seq_len(nrow(merged))),
+            Store = merged$store_name,
+            Value = fmt_val,
+            Growth = fmt_growth,
+            check.names = FALSE
+          ),
+          c("Rank","Store",kpi_label,"Growth")
+        ),
+        options = list(
+          pageLength = 15,
+          scrollX = TRUE
+        )
+      )
+      
+    })
   })
   
   output$heatmap_plot <- renderPlotly({
@@ -422,7 +444,7 @@ server <- function(input, output, session) {
       "SELECT COUNT(DISTINCT ft.store_id) AS val
        FROM fact_transaction ft JOIN dim_store ds ON ft.store_id = ds.store_id %s", sq$where_prev))$val)
     bs4ValueBox(value = as.integer(cur), subtitle = make_subtitle("Active Stores", pct_badge(cur, prv)),
-                icon = icon("store"), color = "primary", width = 12)
+                icon = icon("store"), color = "primary")
   })
   
   output$store_top_revenue <- renderbs4ValueBox({
@@ -436,10 +458,10 @@ server <- function(input, output, session) {
     bs4ValueBox(
       value    = fmt_rupiah(res$val),
       subtitle = tagList(
-        tags$div(style="font-size:13px; opacity:0.9;", "Top Store Revenue"),
-        tags$div(style="font-size:11px; opacity:0.7; margin-top:2px;",
+        tags$div(style="font-size:18px; opacity:0.9;", "Top Store Revenue"),
+        tags$div(style="font-size:15px; opacity:0.7; margin-top:2px;",
                  if (nrow(res) > 0) res$store_name else "-")),
-      icon = icon("trophy"), color = "success", width = 12)
+      icon = icon("trophy"), color = "success")
   })
   
   output$store_avg_aov <- renderbs4ValueBox({
@@ -459,13 +481,14 @@ server <- function(input, output, session) {
   
   # ===================== STORE ANALYSIS — Charts ==============================================
   output$store_revenue_bar <- renderPlotly({
-    sq   <- store_query()
-    data <- dbGetQuery(con, sprintf(
+    sq  <- store_query()
+    sql <- sprintf(
       "SELECT ds.store_name, SUM(ftd.product_price * ftd.quantity) AS revenue
        FROM fact_transaction ft
        JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
        JOIN dim_store ds ON ft.store_id = ds.store_id %s
-       GROUP BY ft.store_id, ds.store_name ORDER BY revenue DESC LIMIT 10", sq$where))
+       GROUP BY ft.store_id, ds.store_name ORDER BY revenue DESC LIMIT 10", sq$where)
+    data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
     data <- data[order(data$revenue), ]
     plot_ly(data, x=~revenue, y=~factor(store_name, levels=store_name),
@@ -475,22 +498,7 @@ server <- function(input, output, session) {
       layout(xaxis=list(title="Revenue (Rp)", tickformat=".2s", showgrid=TRUE, gridcolor="#E2E8F0"),
              yaxis=list(title="", showgrid=FALSE),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
-             margin=list(t=10, b=10, l=160, r=20))
-  })
-  observeEvent(input$btn_modal_store_revenue, {
-    sq   <- store_query()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT ds.store_name, SUM(ftd.product_price * ftd.quantity) AS revenue
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id %s
-       GROUP BY ft.store_id, ds.store_name ORDER BY revenue DESC", sq$where))
-    if (nrow(full) == 0) return()
-    show_modal("All Stores by Revenue", data.frame(
-      Rank    = paste0("#", seq_len(nrow(full))),
-      Store   = full$store_name,
-      Revenue = sapply(full$revenue, fmt_rupiah),
-      stringsAsFactors = FALSE))
+             margin=list(t=10, b=50, l=160, r=20))
   })
   
   output$store_type_donut <- renderPlotly({
@@ -513,78 +521,46 @@ server <- function(input, output, session) {
   })
   
   output$store_aov_bar <- renderPlotly({
-    sq   <- store_query()
-    data <- dbGetQuery(con, sprintf(
+    sq  <- store_query()
+    sql <- sprintf(
       "SELECT ds.store_name,
               ROUND(SUM(ftd.product_price * ftd.quantity) / COUNT(DISTINCT ft.invoice_id), 0) AS aov
        FROM fact_transaction ft
        JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
        JOIN dim_store ds ON ft.store_id = ds.store_id %s
-       GROUP BY ft.store_id, ds.store_name ORDER BY aov DESC LIMIT 10", sq$where))
+       GROUP BY ft.store_id, ds.store_name ORDER BY aov DESC LIMIT 10", sq$where)
+    data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
-    data <- data[order(data$aov), ]
-    plot_ly(data, x=~aov, y=~factor(store_name, levels=store_name),
-            type="bar", orientation="h",
+    plot_ly(data, x=~store_name, y=~aov, type="bar",
             marker=list(color="#F59E0B", line=list(color="#D97706", width=0.8)),
-            hovertemplate="<b>%{y}</b><br>AOV: Rp %{x:,.0f}<extra></extra>") |>
-      layout(xaxis=list(title="AOV (Rp)", tickformat=".2s", showgrid=TRUE, gridcolor="#E2E8F0"),
-             yaxis=list(title="", showgrid=FALSE),
+            hovertemplate="<b>%{x}</b><br>AOV: Rp %{y:,.0f}<extra></extra>") |>
+      layout(xaxis=list(title="", tickangle=-35, showgrid=FALSE),
+             yaxis=list(title="AOV (Rp)", tickformat=".2s", gridcolor="#E2E8F0"),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
-             margin=list(t=10, b=10, l=160, r=20))
-  })
-  observeEvent(input$btn_modal_store_aov, {
-    sq   <- store_query()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT ds.store_name,
-              ROUND(SUM(ftd.product_price * ftd.quantity) / COUNT(DISTINCT ft.invoice_id), 0) AS aov
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id %s
-       GROUP BY ft.store_id, ds.store_name ORDER BY aov DESC", sq$where))
-    if (nrow(full) == 0) return()
-    show_modal("All Stores by AOV", data.frame(
-      Rank  = paste0("#", seq_len(nrow(full))),
-      Store = full$store_name,
-      AOV   = sapply(full$aov, fmt_rupiah),
-      stringsAsFactors = FALSE))
+             margin=list(t=10, b=100, l=60, r=10))
   })
   
   output$store_trx_bar <- renderPlotly({
-    sq   <- store_query()
-    data <- dbGetQuery(con, sprintf(
+    sq  <- store_query()
+    sql <- sprintf(
       "SELECT ds.store_name, COUNT(DISTINCT ft.invoice_id) AS n_trx
        FROM fact_transaction ft
        JOIN dim_store ds ON ft.store_id = ds.store_id %s
-       GROUP BY ft.store_id, ds.store_name ORDER BY n_trx DESC LIMIT 10", sq$where))
+       GROUP BY ft.store_id, ds.store_name ORDER BY n_trx DESC LIMIT 10", sq$where)
+    data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
-    data <- data[order(data$n_trx), ]
-    plot_ly(data, x=~n_trx, y=~factor(store_name, levels=store_name),
-            type="bar", orientation="h",
+    plot_ly(data, x=~store_name, y=~n_trx, type="bar",
             marker=list(color="#06B6D4", line=list(color="#0891B2", width=0.8)),
-            hovertemplate="<b>%{y}</b><br>Transactions: %{x:,}<extra></extra>") |>
-      layout(xaxis=list(title="Total Transactions", showgrid=TRUE, gridcolor="#E2E8F0"),
-             yaxis=list(title="", showgrid=FALSE),
+            hovertemplate="<b>%{x}</b><br>Transactions: %{y:,}<extra></extra>") |>
+      layout(xaxis=list(title="", tickangle=-35, showgrid=FALSE),
+             yaxis=list(title="Total Transactions", gridcolor="#E2E8F0"),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
-             margin=list(t=10, b=10, l=160, r=20))
-  })
-  observeEvent(input$btn_modal_store_trx, {
-    sq   <- store_query()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT ds.store_name, COUNT(DISTINCT ft.invoice_id) AS n_trx
-       FROM fact_transaction ft
-       JOIN dim_store ds ON ft.store_id = ds.store_id %s
-       GROUP BY ft.store_id, ds.store_name ORDER BY n_trx DESC", sq$where))
-    if (nrow(full) == 0) return()
-    show_modal("All Stores by Transactions", data.frame(
-      Rank         = paste0("#", seq_len(nrow(full))),
-      Store        = full$store_name,
-      Transactions = sapply(full$n_trx, fmt_num),
-      stringsAsFactors = FALSE))
+             margin=list(t=10, b=100, l=60, r=10))
   })
   
   output$store_province_bar <- renderPlotly({
-    sq   <- store_query()
-    data <- dbGetQuery(con, sprintf(
+    sq  <- store_query()
+    sql <- sprintf(
       "SELECT ds.store_province,
               SUM(ftd.product_price * ftd.quantity) AS revenue,
               COUNT(DISTINCT ft.invoice_id) AS n_trx,
@@ -592,7 +568,8 @@ server <- function(input, output, session) {
        FROM fact_transaction ft
        JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
        JOIN dim_store ds ON ft.store_id = ds.store_id %s
-       GROUP BY ds.store_province ORDER BY revenue DESC", sq$where))
+       GROUP BY ds.store_province ORDER BY revenue DESC", sq$where)
+    data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
     data <- data[order(data$revenue), ]
     plot_ly(data, x=~revenue, y=~factor(store_province, levels=store_province),
@@ -604,31 +581,11 @@ server <- function(input, output, session) {
       layout(xaxis=list(title="Revenue (Rp)", tickformat=".2s", showgrid=TRUE, gridcolor="#E2E8F0"),
              yaxis=list(title="", showgrid=FALSE),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
-             margin=list(t=10, b=10, l=140, r=20))
-  })
-  observeEvent(input$btn_modal_store_province, {
-    sq   <- store_query()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT ds.store_province,
-              SUM(ftd.product_price * ftd.quantity) AS revenue,
-              COUNT(DISTINCT ft.invoice_id) AS n_trx,
-              COUNT(DISTINCT ft.store_id)   AS n_stores
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id %s
-       GROUP BY ds.store_province ORDER BY revenue DESC", sq$where))
-    if (nrow(full) == 0) return()
-    show_modal("All Provinces by Revenue", data.frame(
-      Rank         = paste0("#", seq_len(nrow(full))),
-      Province     = full$store_province,
-      Revenue      = sapply(full$revenue, fmt_rupiah),
-      Transactions = sapply(full$n_trx, fmt_num),
-      Stores       = full$n_stores,
-      stringsAsFactors = FALSE))
+             margin=list(t=10, b=50, l=140, r=20))
   })
   
   output$store_ranking_table <- renderTable({
-    sq  <- store_query()
+    sq      <- store_query()
     cur <- dbGetQuery(con, sprintf(
       "SELECT ds.store_name, ds.store_city, ds.store_type,
               COUNT(DISTINCT ft.invoice_id) AS n_trx,
@@ -638,7 +595,7 @@ server <- function(input, output, session) {
        JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
        JOIN dim_store ds ON ft.store_id = ds.store_id %s
        GROUP BY ft.store_id, ds.store_name, ds.store_city, ds.store_type
-       ORDER BY revenue DESC", sq$where))
+       ORDER BY revenue DESC LIMIT 10", sq$where))
     prev <- dbGetQuery(con, sprintf(
       "SELECT ds.store_name, SUM(ftd.product_price * ftd.quantity) AS revenue_prev
        FROM fact_transaction ft
@@ -650,7 +607,7 @@ server <- function(input, output, session) {
     merged <- merged[order(-merged$revenue), ]
     merged$growth <- ifelse(is.na(merged$revenue_prev)|merged$revenue_prev==0, NA,
                             (merged$revenue-merged$revenue_prev)/abs(merged$revenue_prev)*100)
-    out <- data.frame(
+    data.frame(
       Rank    = paste0("#", seq_len(nrow(merged))),
       Store   = merged$store_name,
       City    = merged$store_city,
@@ -661,43 +618,7 @@ server <- function(input, output, session) {
       Growth  = ifelse(is.na(merged$growth), "N/A",
                        paste0(ifelse(merged$growth>=0,"\u25b2 ","\u25bc "), sprintf("%.1f%%",abs(merged$growth)))),
       check.names=FALSE, stringsAsFactors=FALSE)
-    head(out, 10)
   }, striped=TRUE, hover=TRUE, bordered=FALSE, spacing="s", width="100%", align="llllrrrr")
-  observeEvent(input$btn_modal_store_ranking, {
-    sq  <- store_query()
-    cur <- dbGetQuery(con, sprintf(
-      "SELECT ds.store_name, ds.store_city, ds.store_type,
-              COUNT(DISTINCT ft.invoice_id) AS n_trx,
-              SUM(ftd.product_price * ftd.quantity) AS revenue,
-              ROUND(SUM(ftd.product_price * ftd.quantity) / COUNT(DISTINCT ft.invoice_id), 0) AS aov
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id %s
-       GROUP BY ft.store_id, ds.store_name, ds.store_city, ds.store_type
-       ORDER BY revenue DESC", sq$where))
-    prev <- dbGetQuery(con, sprintf(
-      "SELECT ds.store_name, SUM(ftd.product_price * ftd.quantity) AS revenue_prev
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id %s
-       GROUP BY ft.store_id, ds.store_name", sq$where_prev))
-    if (nrow(cur) == 0) return()
-    merged <- merge(cur, prev, by="store_name", all.x=TRUE)
-    merged <- merged[order(-merged$revenue), ]
-    merged$growth <- ifelse(is.na(merged$revenue_prev)|merged$revenue_prev==0, NA,
-                            (merged$revenue-merged$revenue_prev)/abs(merged$revenue_prev)*100)
-    show_modal("Full Store Ranking", data.frame(
-      Rank    = paste0("#", seq_len(nrow(merged))),
-      Store   = merged$store_name,
-      City    = merged$store_city,
-      Type    = merged$store_type,
-      Revenue = sapply(merged$revenue, fmt_rupiah),
-      AOV     = sapply(merged$aov, fmt_rupiah),
-      Trx     = sapply(merged$n_trx, fmt_num),
-      Growth  = ifelse(is.na(merged$growth), "N/A",
-                       paste0(ifelse(merged$growth>=0,"▲ ","▼ "), sprintf("%.1f%%",abs(merged$growth)))),
-      check.names=FALSE, stringsAsFactors=FALSE))
-  })
   
   # ====================== PRODUCT ANALYSIS — KPIs =============================================
   prod_query <- reactive({
@@ -728,14 +649,15 @@ server <- function(input, output, session) {
   
   # =================== PRODUCT ANALYSIS — Charts ===========================================
   output$prod_top_revenue <- renderPlotly({
-    pq   <- prod_query()
-    data <- dbGetQuery(con, sprintf(
+    pq  <- prod_query()
+    sql <- sprintf(
       "SELECT p.product_name, SUM(ftd.product_price * ftd.quantity) AS revenue
        FROM fact_transaction ft
        JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
        JOIN dim_store ds ON ft.store_id = ds.store_id
        JOIN dim_product p ON ftd.product_id = p.product_id %s
-       GROUP BY p.product_id, p.product_name ORDER BY revenue DESC LIMIT 10", pq$where))
+       GROUP BY p.product_id, p.product_name ORDER BY revenue DESC LIMIT 10", pq$where)
+    data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
     data <- data[order(data$revenue), ]
     plot_ly(data, x=~revenue, y=~factor(product_name, levels=product_name),
@@ -743,40 +665,21 @@ server <- function(input, output, session) {
             marker=list(color="#2563EB", line=list(color="#1E3A8A", width=0.5)),
             hovertemplate="<b>%{y}</b><br>Revenue: Rp %{x:,.0f}<extra></extra>") |>
       layout(xaxis=list(title="Revenue (Rp)", tickformat=".2s", showgrid=TRUE, gridcolor="#E2E8F0"),
-             yaxis=list(title="", showgrid=FALSE),
+             yaxis=list(title="", showgrid=FALSE,tickfont=list(size=7)),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
-             margin=list(t=10, b=10, l=200, r=20))
-  })
-  observeEvent(input$btn_modal_prod_revenue, {
-    pq   <- prod_query()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT p.product_name, p.brand,
-              SUM(ftd.product_price * ftd.quantity) AS revenue,
-              SUM(ftd.quantity) AS qty
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id
-       JOIN dim_product p ON ftd.product_id = p.product_id %s
-       GROUP BY p.product_id, p.product_name, p.brand ORDER BY revenue DESC", pq$where))
-    if (nrow(full) == 0) return()
-    show_modal("All Products by Revenue", data.frame(
-      Rank    = paste0("#", seq_len(nrow(full))),
-      Product = full$product_name,
-      Brand   = full$brand,
-      Revenue = sapply(full$revenue, fmt_rupiah),
-      Qty     = sapply(full$qty, fmt_num),
-      stringsAsFactors = FALSE))
+             margin=list(t=10, b=50, l=200, r=20))
   })
   
   output$prod_top_qty <- renderPlotly({
-    pq   <- prod_query()
-    data <- dbGetQuery(con, sprintf(
+    pq  <- prod_query()
+    sql <- sprintf(
       "SELECT p.product_name, SUM(ftd.quantity) AS qty
        FROM fact_transaction ft
        JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
        JOIN dim_store ds ON ft.store_id = ds.store_id
        JOIN dim_product p ON ftd.product_id = p.product_id %s
-       GROUP BY p.product_id, p.product_name ORDER BY qty DESC LIMIT 10", pq$where))
+       GROUP BY p.product_id, p.product_name ORDER BY qty DESC LIMIT 10", pq$where)
+    data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
     data <- data[order(data$qty), ]
     plot_ly(data, x=~qty, y=~factor(product_name, levels=product_name),
@@ -784,38 +687,22 @@ server <- function(input, output, session) {
             marker=list(color="#10B981", line=list(color="#065F46", width=0.5)),
             hovertemplate="<b>%{y}</b><br>Qty: %{x:,}<extra></extra>") |>
       layout(xaxis=list(title="Quantity Sold", showgrid=TRUE, gridcolor="#E2E8F0"),
-             yaxis=list(title="", showgrid=FALSE),
+             yaxis=list(title="", showgrid=FALSE,tickfont=list(size=7)),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
-             margin=list(t=10, b=10, l=200, r=20))
-  })
-  observeEvent(input$btn_modal_prod_qty, {
-    pq   <- prod_query()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT p.product_name, p.brand, SUM(ftd.quantity) AS qty
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id
-       JOIN dim_product p ON ftd.product_id = p.product_id %s
-       GROUP BY p.product_id, p.product_name, p.brand ORDER BY qty DESC", pq$where))
-    if (nrow(full) == 0) return()
-    show_modal("All Products by Quantity", data.frame(
-      Rank    = paste0("#", seq_len(nrow(full))),
-      Product = full$product_name,
-      Brand   = full$brand,
-      Qty     = sapply(full$qty, fmt_num),
-      stringsAsFactors = FALSE))
+             margin=list(t=10, b=50, l=200, r=20))
   })
   
   output$prod_kategori_bar <- renderPlotly({
-    pq   <- prod_query()
-    data <- dbGetQuery(con, sprintf(
+    pq  <- prod_query()
+    sql <- sprintf(
       "SELECT c.category_lvl1, SUM(ftd.product_price * ftd.quantity) AS revenue
        FROM fact_transaction ft
        JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
        JOIN dim_store ds ON ft.store_id = ds.store_id
        JOIN dim_product p ON ftd.product_id = p.product_id
        JOIN dim_category c ON p.category_id = c.category_id %s
-       GROUP BY c.category_lvl1 ORDER BY revenue DESC", pq$where))
+       GROUP BY c.category_lvl1 ORDER BY revenue DESC", pq$where)
+    data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
     data <- data[order(data$revenue), ]
     colors <- colorRampPalette(c("#BFDBFE","#2563EB"))(nrow(data))
@@ -826,35 +713,19 @@ server <- function(input, output, session) {
       layout(xaxis=list(title="Revenue (Rp)", tickformat=".2s", showgrid=TRUE, gridcolor="#E2E8F0"),
              yaxis=list(title="", showgrid=FALSE),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
-             margin=list(t=10, b=10, l=160, r=20))
-  })
-  observeEvent(input$btn_modal_prod_kategori, {
-    pq   <- prod_query()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT c.category_lvl1, SUM(ftd.product_price * ftd.quantity) AS revenue
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id
-       JOIN dim_product p ON ftd.product_id = p.product_id
-       JOIN dim_category c ON p.category_id = c.category_id %s
-       GROUP BY c.category_lvl1 ORDER BY revenue DESC", pq$where))
-    if (nrow(full) == 0) return()
-    show_modal("All Categories by Revenue", data.frame(
-      Rank     = paste0("#", seq_len(nrow(full))),
-      Category = full$category_lvl1,
-      Revenue  = sapply(full$revenue, fmt_rupiah),
-      stringsAsFactors = FALSE))
+             margin=list(t=10, b=50, l=160, r=20))
   })
   
   output$prod_brand_bar <- renderPlotly({
-    pq   <- prod_query()
-    data <- dbGetQuery(con, sprintf(
+    pq  <- prod_query()
+    sql <- sprintf(
       "SELECT p.brand, SUM(ftd.product_price * ftd.quantity) AS revenue, SUM(ftd.quantity) AS qty
        FROM fact_transaction ft
        JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
        JOIN dim_store ds ON ft.store_id = ds.store_id
        JOIN dim_product p ON ftd.product_id = p.product_id %s
-       GROUP BY p.brand ORDER BY revenue DESC LIMIT 15", pq$where))
+       GROUP BY p.brand ORDER BY revenue DESC LIMIT 15", pq$where)
+    data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
     data <- data[order(data$revenue), ]
     plot_ly(data, x=~revenue, y=~factor(brand, levels=brand),
@@ -865,29 +736,12 @@ server <- function(input, output, session) {
       layout(xaxis=list(title="Revenue (Rp)", tickformat=".2s", showgrid=TRUE, gridcolor="#E2E8F0"),
              yaxis=list(title="", showgrid=FALSE),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
-             margin=list(t=10, b=10, l=120, r=20))
-  })
-  observeEvent(input$btn_modal_prod_brand, {
-    pq   <- prod_query()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT p.brand, SUM(ftd.product_price * ftd.quantity) AS revenue, SUM(ftd.quantity) AS qty
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id
-       JOIN dim_product p ON ftd.product_id = p.product_id %s
-       GROUP BY p.brand ORDER BY revenue DESC", pq$where))
-    if (nrow(full) == 0) return()
-    show_modal("All Brands by Revenue", data.frame(
-      Rank    = paste0("#", seq_len(nrow(full))),
-      Brand   = full$brand,
-      Revenue = sapply(full$revenue, fmt_rupiah),
-      Qty     = sapply(full$qty, fmt_num),
-      stringsAsFactors = FALSE))
+             margin=list(t=10, b=50, l=120, r=20))
   })
   
   output$prod_velocity <- renderPlotly({
-    pq   <- prod_query()
-    data <- dbGetQuery(con, sprintf(
+    pq  <- prod_query()
+    sql <- sprintf(
       "SELECT p.product_name, p.brand,
               SUM(ftd.quantity) AS total_qty,
               COUNT(DISTINCT DATE(ft.invoice_datetime)) AS days_sold,
@@ -897,47 +751,24 @@ server <- function(input, output, session) {
        JOIN dim_store ds ON ft.store_id = ds.store_id
        JOIN dim_product p ON ftd.product_id = p.product_id %s
        GROUP BY p.product_id, p.product_name, p.brand
-       ORDER BY velocity DESC LIMIT 30", pq$where))
+       ORDER BY velocity DESC LIMIT 30", pq$where)
+    data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
-    avg_vel    <- mean(data$velocity, na.rm=TRUE)
-    data$color <- ifelse(data$velocity >= avg_vel, "#10B981", "#EF4444")
+    avg_vel       <- mean(data$velocity, na.rm=TRUE)
+    data$color    <- ifelse(data$velocity >= avg_vel, "#10B981", "#EF4444")
     data <- data[order(data$velocity), ]
     plot_ly(data, x=~velocity, y=~factor(product_name, levels=product_name),
             type="bar", orientation="h",
             marker=list(color=~color), customdata=~total_qty,
             hovertemplate="<b>%{y}</b><br>Velocity: %{x:.2f} qty/day<br>Total Qty: %{customdata:,}<extra></extra>") |>
       layout(xaxis=list(title="Velocity (qty/day)", showgrid=TRUE, gridcolor="#E2E8F0"),
-             yaxis=list(title="", showgrid=FALSE),
+             yaxis=list(title="", showgrid=FALSE,tickfont=list(size=7)),
              shapes=list(list(type="line", x0=avg_vel, x1=avg_vel, y0=0, y1=1,
                               yref="paper", line=list(color="#2563EB", dash="dash", width=2))),
              annotations=list(list(x=avg_vel, y=1, yref="paper", text="Avg",
                                    showarrow=FALSE, font=list(color="#2563EB", size=11))),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
-             margin=list(t=10, b=10, l=200, r=20))
-  })
-  observeEvent(input$btn_modal_prod_velocity, {
-    pq   <- prod_query()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT p.product_name, p.brand,
-              SUM(ftd.quantity) AS total_qty,
-              COUNT(DISTINCT DATE(ft.invoice_datetime)) AS days_sold,
-              ROUND(SUM(ftd.quantity) / COUNT(DISTINCT DATE(ft.invoice_datetime)), 2) AS velocity
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id
-       JOIN dim_product p ON ftd.product_id = p.product_id %s
-       GROUP BY p.product_id, p.product_name, p.brand
-       ORDER BY velocity DESC", pq$where))
-    if (nrow(full) == 0) return()
-    out <- data.frame(
-      Rank          = paste0("#", seq_len(nrow(full))),
-      Product       = full$product_name,
-      Brand         = full$brand,
-      "Velocity"    = paste0(full$velocity, " qty/day"),
-      "Total Qty"   = sapply(full$total_qty, fmt_num),
-      "Days Sold"   = full$days_sold,
-      check.names   = FALSE, stringsAsFactors = FALSE)
-    show_modal("All Products by Velocity", out)
+             margin=list(t=10, b=50, l=200, r=20))
   })
   
   output$prod_scatter <- renderPlotly({
@@ -1069,11 +900,12 @@ server <- function(input, output, session) {
       value    = paste0(pct, "%"),
       subtitle = tagList(
         tags$div(style="font-size:13px; opacity:0.9;", "New Customer Ratio"),
-        tags$div(style="font-size:11px; opacity:0.7; margin-top:2px;",
+        tags$div(style="font-size:20px; opacity:0.7; margin-top:2px;",
                  paste0(fmt_num(n_new), " new / ", fmt_num(n_all), " total"))),
-      icon=icon("users"), color="success", width=12)
+      icon=icon("users"), color="success",width=4)
   })
   
+  # NOTE: cust_new_total is kept for backward compat but replaced by cust_total_aktif in UI
   output$cust_new_total <- renderbs4ValueBox({
     cf  <- cust_flt()
     cte <- first_trans_cte(cf$where)
@@ -1111,33 +943,33 @@ server <- function(input, output, session) {
              yaxis2 = list(title="MoM Growth (%)", overlaying="y", side="right",
                            showgrid=FALSE, zeroline=TRUE, zerolinecolor="#E2E8F0"),
              xaxis  = list(title="", showgrid=FALSE),
-             legend = list(orientation="h", y=-0.15),
+             legend = list(orientation="h", y=-0.5),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
              margin=list(t=10, b=50, l=60, r=60))
   })
   
   output$cust_new_vs_returning <- renderPlotly({
     cf  <- cust_flt()
-    sql <- paste0("
+    sql <- sprintf("
       WITH first_month AS (
         SELECT ft.customer_id,
-               DATE_FORMAT(MIN(ft.invoice_datetime), '%Y-%m') AS first_m
+               DATE_FORMAT(MIN(ft.invoice_datetime), '%%Y-%%m') AS first_m
         FROM fact_transaction ft
         JOIN dim_store ds ON ft.store_id=ds.store_id
         JOIN dim_customer dc ON ft.customer_id=dc.customer_id
-        ", cf$where, " AND ft.customer_id > 0
+        %s AND ft.customer_id > 0
         GROUP BY ft.customer_id
       )
-      SELECT DATE_FORMAT(ft.invoice_datetime, '%Y-%m') AS month_label,
-        COUNT(DISTINCT CASE WHEN fm.first_m = DATE_FORMAT(ft.invoice_datetime,'%Y-%m') THEN ft.customer_id END) AS new_cust,
-        COUNT(DISTINCT CASE WHEN fm.first_m < DATE_FORMAT(ft.invoice_datetime,'%Y-%m') THEN ft.customer_id END) AS returning_cust
+      SELECT DATE_FORMAT(ft.invoice_datetime, '%%Y-%%m') AS month_label,
+        COUNT(DISTINCT CASE WHEN fm.first_m = DATE_FORMAT(ft.invoice_datetime,'%%Y-%%m') THEN ft.customer_id END) AS new_cust,
+        COUNT(DISTINCT CASE WHEN fm.first_m < DATE_FORMAT(ft.invoice_datetime,'%%Y-%%m') THEN ft.customer_id END) AS returning_cust
       FROM fact_transaction ft
       JOIN dim_store ds ON ft.store_id=ds.store_id
       JOIN dim_customer dc ON ft.customer_id=dc.customer_id
       JOIN first_month fm ON ft.customer_id=fm.customer_id
-      ", cf$where, " AND ft.customer_id > 0
-      GROUP BY DATE_FORMAT(ft.invoice_datetime,'%Y-%m')
-      ORDER BY month_label")
+      %s AND ft.customer_id > 0
+      GROUP BY DATE_FORMAT(ft.invoice_datetime,'%%Y-%%m')
+      ORDER BY month_label", cf$where, cf$where)
     data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
     plot_ly(data, x=~month_label) |>
@@ -1154,8 +986,8 @@ server <- function(input, output, session) {
   
   output$cust_first_purchase <- renderPlotly({
     cf  <- cust_flt()
-    sql <- paste0("
-      SELECT DATE_FORMAT(fi.first_dt,'%Y-%m') AS month_label,
+    sql <- sprintf("
+      SELECT DATE_FORMAT(fi.first_dt,'%%Y-%%m') AS month_label,
              ROUND(AVG(fv.first_val),0) AS avg_val,
              MIN(fv.first_val) AS min_val,
              MAX(fv.first_val) AS max_val
@@ -1164,7 +996,7 @@ server <- function(input, output, session) {
         FROM fact_transaction ft
         JOIN dim_store ds ON ft.store_id=ds.store_id
         JOIN dim_customer dc ON ft.customer_id=dc.customer_id
-        ", cf$where, " AND ft.customer_id > 0
+        %s AND ft.customer_id > 0
         GROUP BY ft.customer_id
       ) fi
       JOIN (
@@ -1179,8 +1011,8 @@ server <- function(input, output, session) {
         ) fm ON ft2.customer_id=fm.customer_id AND ft2.invoice_datetime=fm.first_dt
         GROUP BY ft2.customer_id
       ) fv ON fi.customer_id=fv.customer_id
-      GROUP BY DATE_FORMAT(fi.first_dt,'%Y-%m')
-      ORDER BY month_label")
+      GROUP BY DATE_FORMAT(fi.first_dt,'%%Y-%%m')
+      ORDER BY month_label", cf$where)
     data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
     plot_ly(data, x=~month_label) |>
@@ -1200,7 +1032,7 @@ server <- function(input, output, session) {
   output$cust_by_city <- renderPlotly({
     cf   <- cust_flt()
     mode <- if (!is.null(input$city_view_mode)) input$city_view_mode else "calendar"
-    sql  <- paste0("
+    sql  <- sprintf("
       WITH store_open AS (
         SELECT store_city, MIN(store_open_date) AS city_open_date
         FROM dim_store GROUP BY store_city
@@ -1210,18 +1042,18 @@ server <- function(input, output, session) {
         FROM fact_transaction ft
         JOIN dim_store ds ON ft.store_id=ds.store_id
         JOIN dim_customer dc ON ft.customer_id=dc.customer_id
-        ", cf$where, " AND ft.customer_id > 0
+        %s AND ft.customer_id > 0
         GROUP BY ft.customer_id, ds.store_city
       )
       SELECT ft.store_city,
-             DATE_FORMAT(ft.first_dt,'%Y-%m') AS month_label,
+             DATE_FORMAT(ft.first_dt,'%%Y-%%m') AS month_label,
              ANY_VALUE(TIMESTAMPDIFF(MONTH, so.city_open_date,
-               DATE(CONCAT(DATE_FORMAT(ft.first_dt,'%Y-%m'),'-01'))) + 1) AS operational_month,
+               DATE(CONCAT(DATE_FORMAT(ft.first_dt,'%%Y-%%m'),'-01'))) + 1) AS operational_month,
              COUNT(ft.customer_id) AS new_customers
       FROM first_trans ft
       JOIN store_open so ON ft.store_city=so.store_city
-      GROUP BY ft.store_city, DATE_FORMAT(ft.first_dt,'%Y-%m')
-      ORDER BY ft.store_city, month_label")
+      GROUP BY ft.store_city, DATE_FORMAT(ft.first_dt,'%%Y-%%m')
+      ORDER BY ft.store_city, month_label", cf$where)
     data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
     x_col   <- if (mode == "calendar") "month_label" else "operational_month"
@@ -1275,8 +1107,8 @@ server <- function(input, output, session) {
   })
   
   output$cust_kota_bar <- renderPlotly({
-    cf   <- cust_flt()
-    data <- dbGetQuery(con, sprintf(
+    cf  <- cust_flt()
+    sql <- sprintf(
       "SELECT dc.customer_city,
               SUM(ftd.product_price * ftd.quantity) AS revenue,
               COUNT(DISTINCT ft.customer_id) AS n_cust
@@ -1285,7 +1117,8 @@ server <- function(input, output, session) {
        JOIN dim_store ds ON ft.store_id = ds.store_id
        JOIN dim_customer dc ON ft.customer_id = dc.customer_id
        %s AND ft.customer_id > 0
-       GROUP BY dc.customer_city ORDER BY revenue DESC LIMIT 15", cf$where))
+       GROUP BY dc.customer_city ORDER BY revenue DESC LIMIT 15", cf$where)
+    data <- dbGetQuery(con, sql)
     if (nrow(data) == 0) return(plotly_empty())
     data <- data[order(data$revenue), ]
     plot_ly(data, x=~revenue, y=~factor(customer_city, levels=customer_city),
@@ -1296,32 +1129,12 @@ server <- function(input, output, session) {
       layout(xaxis=list(title="Revenue (Rp)", tickformat=".2s", showgrid=TRUE, gridcolor="#E2E8F0"),
              yaxis=list(title="", showgrid=FALSE),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
-             margin=list(t=10, b=10, l=120, r=20))
-  })
-  observeEvent(input$btn_modal_cust_kota, {
-    cf   <- cust_flt()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT dc.customer_city,
-              SUM(ftd.product_price * ftd.quantity) AS revenue,
-              COUNT(DISTINCT ft.customer_id) AS n_cust
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id
-       JOIN dim_customer dc ON ft.customer_id = dc.customer_id
-       %s AND ft.customer_id > 0
-       GROUP BY dc.customer_city ORDER BY revenue DESC", cf$where))
-    if (nrow(full) == 0) return()
-    show_modal("All Cities by Revenue", data.frame(
-      Rank      = paste0("#", seq_len(nrow(full))),
-      City      = full$customer_city,
-      Revenue   = sapply(full$revenue, fmt_rupiah),
-      Customers = sapply(full$n_cust, fmt_num),
-      stringsAsFactors = FALSE))
+             margin=list(t=10, b=50, l=120, r=20))
   })
   
   output$cust_top_table <- renderTable({
     cf  <- cust_flt()
-    out <- dbGetQuery(con, sprintf(
+    sql <- sprintf(
       "SELECT dc.customer_name, dc.gender, dc.customer_city,
               COUNT(DISTINCT ft.invoice_id) AS n_trx,
               SUM(ftd.product_price * ftd.quantity) AS revenue
@@ -1331,42 +1144,22 @@ server <- function(input, output, session) {
        JOIN dim_customer dc ON ft.customer_id = dc.customer_id
        %s AND ft.customer_id > 0
        GROUP BY ft.customer_id, dc.customer_name, dc.gender, dc.customer_city
-       ORDER BY revenue DESC LIMIT 10", cf$where))
-    if (nrow(out) == 0) return(data.frame())
+       ORDER BY revenue DESC LIMIT 20", cf$where)
+    data <- dbGetQuery(con, sql)
+    if (nrow(data) == 0) return(data.frame())
     data.frame(
-      Rank     = paste0("#", seq_len(nrow(out))),
-      Customer = out$customer_name,
-      Gender   = ifelse(out$gender=="P","Female",ifelse(out$gender=="L","Male",out$gender)),
-      City     = out$customer_city,
-      Trx      = sapply(out$n_trx, fmt_num),
-      Revenue  = sapply(out$revenue, fmt_rupiah),
+      Rank     = paste0("#", seq_len(nrow(data))),
+      Customer = data$customer_name,
+      Gender   = ifelse(data$gender=="P","Female",ifelse(data$gender=="L","Male",data$gender)),
+      City     = data$customer_city,
+      Trx      = sapply(data$n_trx, fmt_num),
+      Revenue  = sapply(data$revenue, fmt_rupiah),
       check.names=FALSE, stringsAsFactors=FALSE)
   }, striped=TRUE, hover=TRUE, bordered=FALSE, spacing="s", width="100%", align="llllrr")
-  observeEvent(input$btn_modal_cust_top, {
-    cf   <- cust_flt()
-    full <- dbGetQuery(con, sprintf(
-      "SELECT dc.customer_name, dc.gender, dc.customer_city,
-              COUNT(DISTINCT ft.invoice_id) AS n_trx,
-              SUM(ftd.product_price * ftd.quantity) AS revenue
-       FROM fact_transaction ft
-       JOIN fact_transaction_detail ftd ON ft.invoice_id = ftd.invoice_id
-       JOIN dim_store ds ON ft.store_id = ds.store_id
-       JOIN dim_customer dc ON ft.customer_id = dc.customer_id
-       %s AND ft.customer_id > 0
-       GROUP BY ft.customer_id, dc.customer_name, dc.gender, dc.customer_city
-       ORDER BY revenue DESC", cf$where))
-    if (nrow(full) == 0) return()
-    show_modal("All Top Customers", data.frame(
-      Rank     = paste0("#", seq_len(nrow(full))),
-      Customer = full$customer_name,
-      Gender   = ifelse(full$gender=="P","Female",ifelse(full$gender=="L","Male",full$gender)),
-      City     = full$customer_city,
-      Trx      = sapply(full$n_trx, fmt_num),
-      Revenue  = sapply(full$revenue, fmt_rupiah),
-      check.names=FALSE, stringsAsFactors=FALSE))
-  })
   
-  # ============== MARKET BASKET ANALYSIS — KPIs & Charts ========================================
+  # =========================================================================
+  # MARKET BASKET ANALYSIS — KPIs & Charts
+  # =========================================================================
   basket_query <- reactive({
     f <- flt()
     list(where = build_where(f$start, f$end, f$province, f$store_type), f = f)
@@ -1391,6 +1184,7 @@ server <- function(input, output, session) {
     dbGetQuery(con, sql)
   })
   
+  # ── KPI: Member ───────────────────────────────────────────────────────────
   output$basket_kpi_trx_member <- renderbs4ValueBox({
     d <- basket_stats(); m <- d[d$customer_type == "Member", ]
     bs4ValueBox(value = if (nrow(m) > 0) fmt_num(m$total_trx) else "0",
@@ -1412,6 +1206,7 @@ server <- function(input, output, session) {
                 icon = icon("receipt"), color = "primary", width = 12)
   })
   
+  # ── KPI: Non-Member ───────────────────────────────────────────────────────
   output$basket_kpi_trx_nonmember <- renderbs4ValueBox({
     d <- basket_stats(); n <- d[d$customer_type == "Non-Member", ]
     bs4ValueBox(value = if (nrow(n) > 0) fmt_num(n$total_trx) else "0",
@@ -1433,6 +1228,7 @@ server <- function(input, output, session) {
                 icon = icon("receipt"), color = "success", width = 12)
   })
   
+  # ── Helper: fetch member/nonmember trend data ────────────────────────────
   basket_trend_data <- reactive({
     bq      <- basket_query()
     fmt     <- date_fmt()
@@ -1451,6 +1247,7 @@ server <- function(input, output, session) {
     dbGetQuery(con, sql)
   })
   
+  # ── Chart: Trend Jumlah Transaksi ─────────────────────────────────────────
   output$basket_trend_trx <- renderPlotly({
     data <- basket_trend_data()
     if (nrow(data) == 0) return(plotly_empty())
@@ -1467,11 +1264,12 @@ server <- function(input, output, session) {
                 hovertemplate="<b>%{x}</b><br>Non-Member: %{y:,} trx<extra></extra>") |>
       layout(xaxis=list(title="", showgrid=FALSE),
              yaxis=list(title="Transactions", gridcolor="#E2E8F0"),
-             legend=list(orientation="h", y=-0.2),
+             legend=list(orientation="h", y=-0.5),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
              margin=list(t=10, b=50, l=60, r=20))
   })
   
+  # ── Chart: Trend Avg Transaction Value ────────────────────────────────────
   output$basket_trend_val <- renderPlotly({
     data <- basket_trend_data()
     if (nrow(data) == 0) return(plotly_empty())
@@ -1488,13 +1286,15 @@ server <- function(input, output, session) {
                 hovertemplate="<b>%{x}</b><br>Non-Member: Rp %{y:,.0f}<extra></extra>") |>
       layout(xaxis=list(title="", showgrid=FALSE),
              yaxis=list(title="Avg Value (Rp)", tickformat=".2s", gridcolor="#E2E8F0"),
-             legend=list(orientation="h", y=-0.2),
+             legend=list(orientation="h", y=-0.5),
              paper_bgcolor="transparent", plot_bgcolor="transparent",
              margin=list(t=10, b=50, l=60, r=20))
   })
   
+  # ── Helper: fetch category affinity data ──────────────────────────────────
   affinity_data <- function(where_clause, is_member) {
-    cond <- if (is_member) "ft.customer_id > 0" else "ft.customer_id = 0"
+    cond      <- if (is_member) "ft.customer_id > 0" else "ft.customer_id = 0"
+    total_sub <- if (is_member) "customer_id > 0" else "customer_id = 0"
     sql <- sprintf("
       SELECT
         CASE WHEN c1.category_lvl1 < c2.category_lvl1 THEN c1.category_lvl1 ELSE c2.category_lvl1 END AS cat_a,
@@ -1517,6 +1317,7 @@ server <- function(input, output, session) {
     dbGetQuery(con, sql)
   }
   
+  # ── Helper: render heatmap from affinity data ─────────────────────────────
   render_affinity_heatmap <- function(data, colorscale) {
     if (nrow(data) == 0) return(plotly_empty())
     cats  <- sort(unique(c(data$cat_a, data$cat_b)))
@@ -1548,6 +1349,7 @@ server <- function(input, output, session) {
     render_affinity_heatmap(d, colorscale=list(c(0,"#ECFDF5"), c(0.5,"#34D399"), c(1,"#065F46")))
   })
   
+  # ── Reactive: show more toggles ──────────────────────────────────────────
   pairs_show_more <- reactiveValues(
     prod_member    = FALSE,
     prod_nonmember = FALSE,
@@ -1559,6 +1361,7 @@ server <- function(input, output, session) {
   observeEvent(input$toggle_sub_member,     { pairs_show_more$sub_member     <- !pairs_show_more$sub_member })
   observeEvent(input$toggle_sub_nonmember,  { pairs_show_more$sub_nonmember  <- !pairs_show_more$sub_nonmember })
   
+  # ── Helper: pairs query ───────────────────────────────────────────────────
   get_pairs <- function(where_clause, is_member, type = "product", limit = 10) {
     cond      <- if (is_member) "ft.customer_id > 0" else "ft.customer_id = 0"
     total_sub <- if (is_member) "customer_id > 0"    else "customer_id = 0"
@@ -1592,7 +1395,7 @@ server <- function(input, output, session) {
       %s
       %s AND %s %s
       GROUP BY %s, %s
-      HAVING freq >= 3
+      HAVING freq >= 1
       ORDER BY freq DESC LIMIT %d",
                    col_a, col_b, total_sub, extra_join,
                    where_clause, cond, extra_filter,
@@ -1612,12 +1415,12 @@ server <- function(input, output, session) {
   }
   
   output$basket_pairs_member <- renderTable({
-    lim <- if (pairs_show_more$prod_member) 20 else 10
+    lim <- if (pairs_show_more$prod_member) 20 else 5
     get_pairs(basket_query()$where, is_member=TRUE, type="product", limit=lim)
   }, striped=TRUE, hover=TRUE, bordered=FALSE, spacing="s", width="100%", align="llllr")
   
   output$basket_pairs_nonmember <- renderTable({
-    lim <- if (pairs_show_more$prod_nonmember) 20 else 10
+    lim <- if (pairs_show_more$prod_nonmember) 20 else 5
     get_pairs(basket_query()$where, is_member=FALSE, type="product", limit=lim)
   }, striped=TRUE, hover=TRUE, bordered=FALSE, spacing="s", width="100%", align="llllr")
   
@@ -1628,6 +1431,8 @@ server <- function(input, output, session) {
     if (pairs_show_more$prod_nonmember) "Show Less" else "Show More"
   })
   
+  
+  # ── Table: Subcategory Pairs Member ──────────────────────────────────────
   output$basket_subcat_member <- renderTable({
     lim <- if (pairs_show_more$sub_member) 20 else 10
     get_pairs(basket_query()$where, is_member=TRUE, type="subcat", limit=lim)
@@ -1645,6 +1450,40 @@ server <- function(input, output, session) {
     if (pairs_show_more$sub_nonmember) "Show Less" else "Show More"
   })
   
+  
+  
+  # ── Sales Insight──────────────────────────────────────
+  output$sales_insight <- renderUI({
+    
+    cur <- query_kpi_val(base_query()$where, "revenue")
+    prev <- query_kpi_val(prev_where(), "revenue")
+    
+    pct <- (cur-prev)/prev*100
+    
+    insight <- if(pct > 10){
+      paste0("🚀 Revenue meningkat signifikan sebesar <b>", round(pct,1),
+             "%</b>. Kinerja penjualan sangat baik pada periode ini.")
+    } else if(pct > 0){
+      paste0("📈 Revenue meningkat <b>", round(pct,1),
+             "%</b>. Tren pertumbuhan positif.")
+    } else {
+      paste0("⚠️ Revenue turun <b>", round(abs(pct),1),
+             "%</b>. Perlu analisis lebih lanjut pada store atau produk.")
+    }
+    
+    HTML(paste0(
+      "<div style='font-size:20px;'>", insight ,"</div>"
+    ))
+    
+  })
+  
+  observeEvent(input$go_sales, {
+    
+    updateTabItems(session,
+                   inputId = "sidebar",
+                   selected = "sales")
+    
+  })
   
   # ── Cleanup ──────────────────────────────────────────────────────────────
   session$onSessionEnded(function() {
