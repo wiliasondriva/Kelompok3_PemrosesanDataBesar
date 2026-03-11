@@ -2,9 +2,8 @@
 
 Dashboard interaktif untuk menganalisis performa penjualan retail menggunakan data transaksi yang dikumpulkan melalui proses web scraping dan data sintetik.
 
-![Retail Dashboard Illustration](assets/alfagift.png)
+![Retail Dashboard Illustration](assets/Welcome Github.png)
 
-> Ilustrasi konsep dashboard retail berbasis ekosistem Alfagift.
 
 ---
 
