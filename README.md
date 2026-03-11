@@ -86,13 +86,20 @@ Dashboard menyajikan berbagai jenis visualisasi data untuk mempermudah analisis,
 
 Visualisasi ini membantu pengguna memahami pola data secara lebih intuitif dan mendukung proses analisis yang lebih efektif.
 
-### Dashboard Modules
+### Dashboard Preview
+Berikut merupakan tampilan utama dari dashboard interaktif yang dikembangkan menggunakan Shiny.
 
-Dashboard ini terdiri dari lima modul utama yang masing-masing dirancang untuk menganalisis aspek berbeda dari aktivitas penjualan retail.
+## Dashboard Screenshots
+
+### Home
+
+![Sales Overview](assets/home.png)
 
 ---
 
-### 1. Sales Overview
+### Sales Overview
+
+![Sales Overview](assets/sales_overview.png)
 
 Modul ini memberikan gambaran umum mengenai performa penjualan secara keseluruhan pada periode yang dipilih. Visualisasi pada bagian ini membantu memonitor tren penjualan, distribusi metode pembayaran, serta aktivitas transaksi.
 
@@ -116,10 +123,12 @@ Modul ini memberikan gambaran umum mengenai performa penjualan secara keseluruha
 
 - Transaction Heatmap  
   Menampilkan pola aktivitas transaksi berdasarkan hari dan jam.
-
+  
 ---
 
-### 2. Store Analysis
+### Store Analysis
+
+![Store Analysis](assets/store_analysis.png)
 
 Modul ini digunakan untuk menganalisis performa setiap toko serta kontribusi masing-masing toko terhadap total penjualan.
 
@@ -140,10 +149,12 @@ Modul ini digunakan untuk menganalisis performa setiap toko serta kontribusi mas
 
 - Store Transactions  
   Menampilkan jumlah transaksi yang terjadi pada setiap toko.
-
+  
 ---
 
-### 3. Product Analysis
+### Product Analysis
+
+![Product Analysis](assets/product_analysis.png)
 
 Modul ini digunakan untuk memahami performa produk, termasuk produk dengan penjualan tertinggi, distribusi harga produk, serta kontribusi kategori dan brand terhadap total revenue.
 
@@ -176,7 +187,9 @@ Modul ini digunakan untuk memahami performa produk, termasuk produk dengan penju
 
 ---
 
-### 4. Customer Analysis
+### Customer Analysis
+
+![Customer Analysis](assets/customer_analysis.png)
 
 Modul ini digunakan untuk memahami karakteristik pelanggan serta perilaku pembelian pelanggan.
 
@@ -208,10 +221,12 @@ Modul ini digunakan untuk memahami karakteristik pelanggan serta perilaku pembel
 
 - Top Customers  
   Menampilkan pelanggan dengan total pembelian tertinggi.
-
+  
 ---
 
-### 5. Market Basket Analysis
+### Market Basket Analysis
+
+![Market Basket Analysis](assets/market_basket.png)
 
 Modul ini digunakan untuk menganalisis pola pembelian pelanggan serta hubungan antar produk atau kategori yang sering dibeli secara bersamaan dalam satu transaksi.
 
@@ -241,54 +256,14 @@ Modul ini digunakan untuk menganalisis pola pembelian pelanggan serta hubungan a
 
 - Top Subcategory Pairs (Non-Member)  
   Menampilkan pasangan subkategori produk yang paling sering dibeli bersama oleh non-member.
-
-### Dashboard Preview
-Berikut merupakan tampilan utama dari dashboard interaktif yang dikembangkan menggunakan Shiny.
-
-## Dashboard Screenshots
-
-### Home
-
-![Sales Overview](assets/home.png)
-
----
-
-### Sales Overview
-
-![Sales Overview](assets/sales_overview.png)
-
----
-
-### Store Analysis
-
-![Store Analysis](assets/store_analysis.png)
-
----
-
-### Product Analysis
-
-![Product Analysis](assets/product_analysis.png)
-
----
-
-### Customer Analysis
-
-![Customer Analysis](assets/customer_analysis.png)
-
----
-
-### Market Basket Analysis
-
-![Market Basket Analysis](assets/market_basket.png)
-
 ---
 
 ## Interpretation & Key Insights
 
-Dataset mencakup periode transaksi dari **5 Januari 2021 hingga 30 Desember 2024**.  
-Dashboard menyediakan fitur filtering yang memungkinkan pengguna untuk menganalisis data pada berbagai rentang waktu.
+Dataset mencakup periode transaksi dari 5 Januari 2021 hingga 30 Desember 2024. Dashboard menyediakan fitur filtering yang memungkinkan pengguna untuk melakukan analisis data pada berbagai rentang waktu sesuai kebutuhan.
 
-Pada dokumentasi ini, interpretasi hasil difokuskan pada **periode tahun 2024** untuk memberikan gambaran kondisi penjualan terbaru berdasarkan data yang tersedia.
+Pada dokumentasi ini, interpretasi hasil difokuskan pada periode tahun 2024 dengan tujuan untuk memberikan gambaran kondisi penjualan terbaru berdasarkan data yang tersedia.
 
-Berdasarkan analisis pada dashboard, beberapa interpretasi hasil dan insight utama yang diperoleh adalah sebagai berikut:
+Pemilihan periode ini dilakukan untuk memperoleh insight yang lebih relevan terhadap kondisi bisnis terkini, sehingga analisis yang dihasilkan dapat menggambarkan pola transaksi, performa penjualan, serta perilaku pelanggan pada periode terbaru.
 
+Berdasarkan analisis pada dashboard, beberapa interpretasi hasil dan insight utama yang diperoleh adalah sebagai berikut.
