@@ -320,9 +320,6 @@ Menyimpan informasi lokasi toko retail.
 - `store_province` - Provinsi lokasi toko
 - `store_open_date` - Tanggal toko mulai beroperasi
 
-**Business Rule:**
-- `store_id = 0` reserved untuk unknown/online-only stores
-
 ---
 
 ###### 3. **Transaction** (Transaksi)
