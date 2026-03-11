@@ -256,7 +256,19 @@ Modul ini digunakan untuk menganalisis pola pembelian pelanggan serta hubungan a
 
 - Top Subcategory Pairs (Non-Member)  
   Menampilkan pasangan subkategori produk yang paling sering dibeli bersama oleh non-member.
+  
 ---
+
+## ERD
+
+### ERD Konseptual
+
+![ERD Konseptual](Doc/ERD_Konseptual.png)
+
+### ERD Design
+
+![ERD Design](Doc/ERD_Relational.png)
+
 
 ## Interpretation & Key Insights
 
