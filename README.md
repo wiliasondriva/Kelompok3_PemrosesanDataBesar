@@ -2,7 +2,7 @@
 
 Dashboard interaktif untuk menganalisis performa penjualan retail menggunakan data transaksi yang dikumpulkan melalui proses web scraping dan data sintetik.
 
-![Retail Dashboard Illustration](assets/opening.png)
+![Retail Dashboard Illustration](assets/alfagift.png)
 
 
 ---
@@ -265,13 +265,332 @@ Modul ini digunakan untuk menganalisis pola pembelian pelanggan serta hubungan a
 
 ![ERD Konseptual](Doc/ERD_Konseptual.png)
 
-### ERD Design
+##### 📊 Overview
 
-![ERD Design](Doc/ERD_Relational.png)
+ERD Konseptual ini menggambarkan **model data konseptual** untuk sistem data warehouse retail menggunakan **Chen Notation**. Diagram ini menekankan pada pemahaman bisnis dan hubungan antar entitas pada level tinggi, tanpa detail implementasi teknis.
 
 ---
 
-## Tools Digunakan
+##### 🎨 Notasi Chen - Penjelasan Simbol
+
+| Simbol | Bentuk | Keterangan |
+|--------|--------|------------|
+| **Entity** | Rectangle (Kotak) | Objek bisnis utama yang datanya disimpan |
+| **Attribute** | Oval (Lingkaran) | Properti atau karakteristik dari entity |
+| **Relationship** | Diamond (Belah Ketupat) | Hubungan antar entity |
+| **Primary Key** | Underlined text | Identifier unik untuk entity (ditandai garis bawah) |
+| **Cardinality** | 1, N, M | Jumlah instance yang terlibat dalam relationship |
+
+---
+
+#### 🏗️ Struktur Database
+
+##### Entitas Utama (6 Entities)
+
+###### 1. **Customer** (Pelanggan)
+Menyimpan informasi pelanggan yang melakukan transaksi.
+
+**Attributes:**
+- `customer_id` (PK) - ID unik pelanggan
+- `customer_name` - Nama lengkap pelanggan
+- `gender` - Jenis kelamin (L/P)
+- `birth_date` - Tanggal lahir
+- `customer_city` - Kota domisili
+
+**Business Rule:** 
+- `customer_id = 0` reserved untuk unknown/guest customers
+
+---
+
+###### 2. **Store** (Toko)
+Menyimpan informasi lokasi toko retail.
+
+**Attributes:**
+- `store_id` (PK) - ID unik toko
+- `store_name` - Nama toko
+- `store_type` - Klasifikasi jenis toko (A/B/C)
+- `store_city` - Kota lokasi toko
+- `store_province` - Provinsi lokasi toko
+- `store_open_date` - Tanggal toko mulai beroperasi
+
+**Business Rule:**
+- `store_id = 0` reserved untuk unknown/online-only stores
+
+---
+
+###### 3. **Transaction** (Transaksi)
+Menyimpan header informasi transaksi penjualan.
+
+**Attributes:**
+- `invoice_id` (PK) - ID unik transaksi
+- `invoice_datetime` - Tanggal dan waktu transaksi
+- `payment_method` - Metode pembayaran (cash/debit/credit/e-wallet)
+
+**Business Rule:**
+- Satu invoice dapat berisi multiple line items (detail transaksi)
+
+---
+
+###### 4. **Transaction_Detail** (Detail Transaksi)
+**⚠️ Weak Entity** - Bergantung pada Transaction
+
+Menyimpan detail produk yang dibeli per transaksi.
+
+**Attributes:**
+- `quantity` - Jumlah produk yang dibeli
+- `product_price` - Harga satuan produk saat transaksi
+
+**Design Decision:**
+- ❌ `line_total` **TIDAK disimpan** (Pure 3NF)
+- ✅ Dihitung on-the-fly: `quantity × product_price`
+
+---
+
+###### 5. **Product** (Produk)
+Menyimpan informasi produk yang dijual.
+
+**Attributes:**
+- `product_id` (PK) - ID unik produk
+- `product_name` - Nama produk
+- `brand` - Merek produk
+- `product_description` - Deskripsi detail produk
+
+**Business Rule:**
+- Setiap produk harus belong to satu category
+
+---
+
+###### 6. **Category** (Kategori Produk)
+Menyimpan kategori produk dengan hierarki 2 level.
+
+**Attributes:**
+- `category_id` (PK) - ID unik kategori
+- `category_lvl1` - Kategori utama (main category)
+- `category_lvl2` - Sub-kategori (detailed category)
+
+**Business Rule:**
+- Natural key: Kombinasi `(category_lvl1, category_lvl2)` harus unique
+
+---
+
+#### 🔗 Relationships
+
+##### 1. **Makes** (Customer → Transaction)
+**Cardinality:** `1:N` (One-to-Many)
+
+- **Satu customer** dapat melakukan **banyak transaksi**
+- **Satu transaksi** dilakukan oleh **satu customer**
+
+**Business Logic:**
+```
+Customer (1) ----< Makes >---- (N) Transaction
+```
+
+---
+
+##### 2. **Occurs_at** (Store → Transaction)
+**Cardinality:** `1:N` (One-to-Many)
+
+- **Satu toko** dapat memiliki **banyak transaksi**
+- **Satu transaksi** terjadi di **satu toko**
+
+**Business Logic:**
+```
+Store (1) ----< Occurs_at >---- (N) Transaction
+```
+---
+
+##### 3. **Contains** (Transaction → Transaction_Detail)
+**Cardinality:** `1:N` (One-to-Many)
+**Type:** Identifying Relationship (Transaction_Detail adalah weak entity)
+
+- **Satu transaksi** dapat berisi **banyak line items**
+- **Satu line item** belong to **satu transaksi**
+
+**Business Logic:**
+```
+Transaction (1) ----< Contains >---- (N) Transaction_Detail
+```
+
+**Note:** `Transaction_Detail` **tidak bisa exist tanpa Transaction**
+
+---
+
+##### 4. **Includes** (Product → Transaction_Detail)
+**Cardinality:** `1:N` (One-to-Many)
+
+- **Satu produk** dapat muncul di **banyak line items** (berbeda transaksi)
+- **Satu line item** contain **satu produk**
+
+**Business Logic:**
+```
+Product (1) ----< Includes >---- (N) Transaction_Detail
+```
+
+---
+
+###### 5. **Belongs_to** (Product → Category)
+**Cardinality:** `N:1` (Many-to-One)
+
+- **Banyak produk** dapat belong to **satu category**
+- **Satu produk** belong to **satu category**
+
+**Business Logic:**
+```
+Product (N) ----< Belongs_to >---- (1) Category
+```
+
+---
+
+
+### ERD Relational
+
+![ERD Design](Doc/ERD_Relational.png)
+
+#### 📊 Overview
+
+ERD Relasional ini menggambarkan **model data fisik** untuk sistem data warehouse retail. Berbeda dari ERD Konseptual yang berfokus pada pemahaman bisnis, ERD Relasional ini menampilkan implementasi teknis lengkap termasuk Primary Key (PK), Foreign Key (FK), dan struktur tabel yang siap diimplementasikan ke dalam database.
+
+---
+
+#### 🎨 Notasi Relasional - Penjelasan Simbol
+
+| Simbol | Keterangan |
+|--------|------------|
+| **PK** | Primary Key — identifier unik untuk setiap record dalam tabel |
+| **FK** | Foreign Key — referensi ke Primary Key tabel lain |
+| **PK, FK** | Kolom yang sekaligus berfungsi sebagai Primary Key dan Foreign Key |
+| **Garis tunggal** | Sisi "satu" pada relasi One-to-Many |
+| **Garis bercabang (crow's foot)** | Sisi "banyak" pada relasi One-to-Many |
+
+---
+
+#### 🏗️ Struktur Tabel
+
+##### 1. **Customer**
+Menyimpan informasi pelanggan yang melakukan transaksi.
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `customer_id` | PK | ID unik pelanggan |
+| `customer_name` | | Nama lengkap pelanggan |
+| `gender` | | Jenis kelamin (L/P) |
+| `birth_date` | | Tanggal lahir |
+| `customer_city` | | Kota domisili pelanggan |
+
+> **Business Rule:** `customer_id = 0` reserved untuk unknown/guest customers.
+
+---
+
+##### 2. **Store**
+Menyimpan informasi lokasi toko retail.
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `store_id` | PK | ID unik toko |
+| `store_name` | | Nama toko |
+| `store_type` | | Klasifikasi jenis toko (A/B/C) |
+| `store_city` | | Kota lokasi toko |
+| `store_province` | | Provinsi lokasi toko |
+| `store_open_date` | | Tanggal toko mulai beroperasi |
+
+> **Business Rule:** `store_id = 0` reserved untuk unknown/online-only stores.
+
+---
+
+##### 3. **Category**
+Menyimpan kategori produk dengan hierarki 2 level.
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `category_id` | PK | ID unik kategori |
+| `category_lvl1` | | Kategori utama (main category) |
+| `category_lvl2` | | Sub-kategori (detailed category) |
+
+> **Business Rule:** Kombinasi `(category_lvl1, category_lvl2)` harus unik.
+
+---
+
+##### 4. **Product**
+Menyimpan informasi produk yang dijual.
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `product_id` | PK | ID unik produk |
+| `product_name` | | Nama produk |
+| `brand` | | Merek produk |
+| `product_description` | | Deskripsi detail produk |
+| `category_id` | FK | Referensi ke tabel Category |
+
+> **Business Rule:** Setiap produk harus belong to satu kategori.
+
+---
+
+##### 5. **Transaction (invoice)**
+Menyimpan header informasi transaksi penjualan.
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `invoice_id` | PK | ID unik transaksi |
+| `invoice_datetime` | | Tanggal dan waktu transaksi |
+| `payment_method` | | Metode pembayaran (cash/debit/credit/e-wallet) |
+| `store_id` | FK | Referensi ke tabel Store |
+| `customer_id` | FK | Referensi ke tabel Customer |
+
+> **Business Rule:** Satu invoice dapat berisi multiple line items (detail transaksi).
+
+---
+
+##### 6. **Transaction_Detail**
+⚠️ **Weak Entity** — Bergantung pada tabel Transaction dan Product.
+
+Menyimpan detail produk yang dibeli per transaksi.
+
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `invoice_id` | PK, FK1 | Referensi ke tabel Transaction |
+| `product_id` | PK, FK2 | Referensi ke tabel Product |
+| `quantity` | | Jumlah produk yang dibeli |
+| `product_price` | | Harga satuan produk saat transaksi |
+
+> **Design Decision:** `line_total` **tidak disimpan** (Pure 3NF). Nilai total dihitung on-the-fly: `quantity × product_price`.
+
+---
+
+#### 🔗 Relasi Antar Tabel
+
+| Relasi | Tabel Asal | Tabel Tujuan | Kardinalitas | Keterangan |
+|--------|-----------|--------------|--------------|------------|
+| Makes | Customer | Transaction | 1 : N | Satu customer dapat melakukan banyak transaksi |
+| Occurs_at | Store | Transaction | 1 : N | Satu toko dapat memiliki banyak transaksi |
+| Contains | Transaction | Transaction_Detail | 1 : N | Satu transaksi dapat berisi banyak line items |
+| Includes | Product | Transaction_Detail | 1 : N | Satu produk dapat muncul di banyak line items |
+| Belongs_to | Product | Category | N : 1 | Banyak produk dapat belong to satu kategori |
+
+---
+
+#### 🔄 Perbedaan ERD Konseptual vs Relasional
+
+| Aspek | ERD Konseptual | ERD Relasional |
+|-------|---------------|----------------|
+| **Notasi** | Chen Notation (diamond, oval) | Crow's Foot Notation |
+| **Level** | Bisnis / konseptual | Teknis / implementasi |
+| **FK** | Tidak ditampilkan | Ditampilkan eksplisit |
+| **Weak Entity** | Ditandai double rectangle | Ditandai dengan PK,FK |
+| **Tujuan** | Pemahaman domain bisnis | Implementasi database |
+
+---
+
+#### 📌 Catatan Desain
+
+- **Normalisasi:** Skema mengikuti **3NF (Third Normal Form)** — tidak ada kolom kalkulasi yang disimpan, semua derived attribute dihitung saat query.
+- **Surrogate Key:** Semua tabel menggunakan surrogate key (`_id`) sebagai Primary Key untuk konsistensi dan performa join.
+- **Reserved ID = 0:** Digunakan pada Customer dan Store untuk menangani data yang tidak diketahui (unknown/guest) tanpa menggunakan NULL pada FK.
+
+
+---
+
+#### Tools Digunakan
 
 | Tool | Kategori | Fungsi |
 |-----|-----|-----|
