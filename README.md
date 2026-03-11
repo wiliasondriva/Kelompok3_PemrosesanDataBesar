@@ -93,7 +93,7 @@ Berikut merupakan tampilan utama dari dashboard interaktif yang dikembangkan men
 
 ### Home
 
-![Sales Overview](assets/home.png)
+![Sales Overview](assets/home1.png)
 
 ---
 
@@ -587,7 +587,7 @@ Menyimpan detail produk yang dibeli per transaksi.
 
 - **Normalisasi:** Skema mengikuti **3NF (Third Normal Form)** — tidak ada kolom kalkulasi yang disimpan, semua derived attribute dihitung saat query.
 - **Surrogate Key:** Semua tabel menggunakan surrogate key (`_id`) sebagai Primary Key untuk konsistensi dan performa join.
-- **Reserved ID = 0:** Digunakan pada Customer dan Store untuk menangani data yang tidak diketahui (unknown/guest) tanpa menggunakan NULL pada FK.
+- **Reserved ID = 0:** Digunakan pada Customer untuk menangani data yang tidak diketahui (unknown/guest) tanpa menggunakan NULL pada FK.
 
 
 ---
