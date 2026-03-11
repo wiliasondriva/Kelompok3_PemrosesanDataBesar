@@ -269,6 +269,19 @@ Modul ini digunakan untuk menganalisis pola pembelian pelanggan serta hubungan a
 
 ![ERD Design](Doc/ERD_Relational.png)
 
+---
+
+## Tools Digunakan
+
+| Tool | Kategori | Fungsi |
+|-----|-----|-----|
+| **R Studio** | IDE & Programming Environment | Digunakan sebagai lingkungan utama untuk menulis, menjalankan, dan mengelola skrip R dalam proses pengembangan dashboard analitik. |
+| **R Shiny** | Web Framework | Digunakan untuk membangun dashboard interaktif berbasis web yang memungkinkan pengguna melakukan eksplorasi data dan visualisasi secara dinamis. |
+| **DBngin** | Database Engine Manager | Digunakan untuk menjalankan dan mengelola instance database secara lokal yang digunakan sebagai penyimpanan data dalam project. |
+| **TablePlus** | Database Management Tool | Digunakan untuk mengelola database secara visual, termasuk melihat tabel, melakukan query SQL, dan memvalidasi struktur data. |
+| **GitHub** | Version Control & Documentation | Digunakan untuk menyimpan source code project, mengelola versi pengembangan, serta mendokumentasikan hasil project melalui repository. |
+
+----
 
 ## Interpretation & Key Insights
 
