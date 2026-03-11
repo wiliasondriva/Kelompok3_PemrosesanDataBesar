@@ -99,7 +99,7 @@ Berikut merupakan tampilan utama dari dashboard interaktif yang dikembangkan men
 
 ### Sales Overview
 
-![Sales Overview](assets/sales_overview.png)
+![Sales Overview](assets/sales.overview.png)
 
 Modul ini memberikan gambaran umum mengenai performa penjualan secara keseluruhan pada periode yang dipilih. Visualisasi pada bagian ini membantu memonitor tren penjualan, distribusi metode pembayaran, serta aktivitas transaksi.
 
@@ -128,7 +128,7 @@ Modul ini memberikan gambaran umum mengenai performa penjualan secara keseluruha
 
 ### Store Analysis
 
-![Store Analysis](assets/store_analysis.png)
+![Store Analysis](assets/store-analysis.png)
 
 Modul ini digunakan untuk menganalisis performa setiap toko serta kontribusi masing-masing toko terhadap total penjualan.
 
@@ -138,23 +138,30 @@ Modul ini digunakan untuk menganalisis performa setiap toko serta kontribusi mas
 - Average Order Value per Store
 
 ##### Visualisasi
-- Top Store Revenue  
-  Menampilkan toko dengan revenue tertinggi.
 
-- Store Type Revenue  
-  Menunjukkan distribusi revenue berdasarkan tipe toko.
+• **Top Store Revenue**  
+Menampilkan toko dengan revenue tertinggi untuk mengidentifikasi store dengan performa penjualan terbaik.
 
-- Store AOV  
-  Membandingkan rata-rata nilai transaksi antar toko.
+• **Store Type Revenue**  
+Menunjukkan distribusi revenue berdasarkan tipe toko (A, B, C) untuk memahami kontribusi masing-masing tipe terhadap total penjualan.
 
-- Store Transactions  
-  Menampilkan jumlah transaksi yang terjadi pada setiap toko.
+• **Store AOV (Average Order Value)**  
+Membandingkan rata-rata nilai transaksi antar toko untuk melihat toko dengan nilai pembelian pelanggan yang lebih tinggi.
+
+• **Store Transactions**  
+Menampilkan jumlah transaksi yang terjadi pada setiap toko sehingga dapat diketahui toko dengan aktivitas transaksi tertinggi.
+
+• **Revenue by Province**  
+Menunjukkan distribusi revenue berdasarkan provinsi sehingga dapat mengidentifikasi wilayah dengan kontribusi penjualan terbesar.
+
+• **Store Ranking**  
+Menampilkan peringkat toko berdasarkan performa penjualan yang mencakup informasi revenue, AOV, jumlah transaksi, dan pertumbuhan penjualan.
   
 ---
 
 ### Product Analysis
 
-![Product Analysis](assets/product_analysis.png)
+![Product Analysis](assets/produk-analysis.png)
 
 Modul ini digunakan untuk memahami performa produk, termasuk produk dengan penjualan tertinggi, distribusi harga produk, serta kontribusi kategori dan brand terhadap total revenue.
 
@@ -189,7 +196,7 @@ Modul ini digunakan untuk memahami performa produk, termasuk produk dengan penju
 
 ### Customer Analysis
 
-![Customer Analysis](assets/customer_analysis.png)
+![Customer Analysis](assets/cust_analysis.png)
 
 Modul ini digunakan untuk memahami karakteristik pelanggan serta perilaku pembelian pelanggan.
 
@@ -226,7 +233,7 @@ Modul ini digunakan untuk memahami karakteristik pelanggan serta perilaku pembel
 
 ### Market Basket Analysis
 
-![Market Basket Analysis](assets/market_basket.png)
+![Market Basket Analysis](assets/MBA.png)
 
 Modul ini digunakan untuk menganalisis pola pembelian pelanggan serta hubungan antar produk atau kategori yang sering dibeli secara bersamaan dalam satu transaksi.
 
@@ -611,6 +618,175 @@ Pada dokumentasi ini, interpretasi hasil difokuskan pada periode tahun 2024 deng
 Pemilihan periode ini dilakukan untuk memperoleh insight yang lebih relevan terhadap kondisi bisnis terkini, sehingga analisis yang dihasilkan dapat menggambarkan pola transaksi, performa penjualan, serta perilaku pelanggan pada periode terbaru.
 
 Berdasarkan analisis pada dashboard, beberapa interpretasi hasil dan insight utama yang diperoleh adalah sebagai berikut.
+
+---
+
+### Sales Overview
+
+Berdasarkan dashboard **Sales Overview** pada periode tahun **2024**, diperoleh beberapa insight utama terkait performa penjualan sebagai berikut.
+
+#### 1. Kinerja Penjualan
+Total revenue yang dihasilkan mencapai **Rp 5.14B** dengan jumlah **21.5K transaksi** dan **225.4K item terjual**. Hal ini menunjukkan bahwa aktivitas penjualan pada periode tersebut cukup tinggi dengan kontribusi dari **198 toko aktif**.
+
+Selain itu, terjadi **peningkatan revenue sebesar 40.3% dibandingkan periode sebelumnya**, yang mengindikasikan pertumbuhan performa penjualan yang signifikan.
+
+#### 2. Perilaku Pembelian Pelanggan
+Nilai **Average Basket Size** tercatat sebesar **10.5 item per transaksi**, yang menunjukkan bahwa pelanggan cenderung membeli beberapa produk dalam satu transaksi.
+
+Sementara itu, **Average Order Value (AOV)** berada pada kisaran **Rp 239.5K per transaksi**, yang menggambarkan rata-rata nilai pembelian pelanggan setiap melakukan transaksi.
+
+#### 3. Tren Penjualan
+Grafik **Revenue Trend** menunjukkan bahwa performa penjualan relatif stabil sepanjang tahun 2024 dengan fluktuasi pada beberapa bulan tertentu. Peningkatan penjualan terlihat pada pertengahan hingga akhir tahun yang menunjukkan adanya momentum penjualan pada periode tersebut.
+
+#### 4. Metode Pembayaran
+Distribusi metode pembayaran menunjukkan bahwa **cash merupakan metode pembayaran yang paling dominan (40.1%)**, diikuti oleh **debit (35.1%)** dan **QRIS (24.7%)**. Hal ini menunjukkan bahwa meskipun pembayaran digital mulai meningkat, transaksi tunai masih menjadi pilihan utama pelanggan.
+
+#### 5. Performa Toko
+Berdasarkan tabel **Top 10 Stores by Revenue**, toko dengan performa penjualan tertinggi adalah **TOKO MALANG 3** dengan revenue sebesar **Rp 48.76M**, diikuti oleh **TOKO YOGYAKARTA 3** dan **TOKO SAMARINDA 6**. Hal ini menunjukkan bahwa beberapa toko memiliki kontribusi penjualan yang lebih besar dibandingkan toko lainnya.
+
+#### 6. Pola Waktu Transaksi
+Visualisasi **Transaction Heatmap** menunjukkan bahwa aktivitas transaksi terjadi sepanjang hari dengan intensitas yang relatif tinggi pada beberapa jam tertentu. Hal ini menunjukkan adanya pola waktu transaksi yang dapat dimanfaatkan untuk strategi operasional toko.
+
+---
+
+### Store Analysis
+
+Modul **Store Analysis** memberikan gambaran mengenai performa penjualan setiap toko serta distribusi revenue berdasarkan tipe toko dan wilayah.
+
+#### 1. Aktivitas Toko
+Pada periode tahun **2024**, terdapat **198 toko aktif** yang berkontribusi terhadap aktivitas penjualan. Jumlah ini menunjukkan adanya peningkatan sebesar **20.0% dibandingkan periode sebelumnya**, yang mengindikasikan ekspansi atau peningkatan aktivitas operasional toko.
+
+#### 2. Toko dengan Performa Penjualan Tertinggi
+Berdasarkan indikator **Top Store Revenue**, toko dengan revenue tertinggi adalah **TOKO MALANG 3** dengan nilai penjualan sebesar **Rp 48.76M**. Hal ini menunjukkan bahwa toko tersebut memiliki kontribusi terbesar terhadap total penjualan dibandingkan toko lainnya.
+
+Visualisasi **Top Store Revenue** juga menunjukkan beberapa toko lain yang memiliki performa penjualan tinggi, seperti **TOKO YOGYAKARTA 3** dan **TOKO SAMARINDA 6**.
+
+#### 3. Distribusi Revenue Berdasarkan Tipe Toko
+Grafik **Store Type Revenue** menunjukkan bahwa:
+
+- **Tipe A** memberikan kontribusi revenue terbesar yaitu sekitar **45.7%**
+- **Tipe B** berkontribusi sekitar **42.5%**
+- **Tipe C** memberikan kontribusi lebih kecil yaitu sekitar **11.8%**
+
+Hal ini menunjukkan bahwa toko dengan tipe **A dan B** memiliki peran yang lebih dominan dalam menghasilkan revenue dibandingkan toko tipe C.
+
+#### 4. Rata-rata Nilai Transaksi per Toko
+Berdasarkan grafik **Store AOV**, rata-rata nilai transaksi pada setiap toko berada pada kisaran **Rp 250K – Rp 300K** per transaksi. Hal ini menunjukkan bahwa nilai pembelian pelanggan pada setiap toko relatif konsisten.
+
+#### 5. Aktivitas Transaksi Toko
+Grafik **Store Transactions** menunjukkan jumlah transaksi yang terjadi pada beberapa toko dengan aktivitas tertinggi. Toko seperti **TOKO MALANG 3**, **TOKO PALEMBANG 2**, dan **TOKO SAMARINDA 6** termasuk dalam kelompok toko dengan jumlah transaksi yang tinggi.
+
+Hal ini menunjukkan bahwa selain memiliki revenue tinggi, toko-toko tersebut juga memiliki tingkat aktivitas transaksi yang tinggi.
+
+#### 6. Distribusi Revenue Berdasarkan Wilayah
+Visualisasi **Revenue by Province** menunjukkan bahwa provinsi **Jawa Barat** memberikan kontribusi revenue terbesar dibandingkan provinsi lainnya. Hal ini diikuti oleh provinsi seperti **Banten** dan **Jawa Timur** yang juga memberikan kontribusi penjualan yang signifikan.
+
+Temuan ini menunjukkan bahwa wilayah **Pulau Jawa** masih menjadi pusat utama aktivitas penjualan retail.
+
+#### 7. Peringkat Performa Toko
+Tabel **Store Ranking** menampilkan peringkat toko berdasarkan beberapa indikator performa seperti revenue, average order value (AOV), jumlah transaksi, serta pertumbuhan penjualan.
+
+Dari tabel tersebut terlihat bahwa beberapa toko tidak hanya memiliki revenue tinggi tetapi juga menunjukkan **pertumbuhan penjualan yang signifikan**, seperti **TOKO YOGYAKARTA 3** dan **TOKO BEKASI 7**.
+
+---
+
+### Product Analysis
+
+Modul **Product Analysis** memberikan gambaran mengenai karakteristik produk, pola harga, serta kontribusi produk, kategori, dan brand terhadap total penjualan.
+
+#### 1. Struktur Produk
+Berdasarkan indikator pada dashboard, terdapat sekitar **4.5K produk**, **896 brand**, dan **10 kategori produk** yang tersedia dalam dataset. Hal ini menunjukkan bahwa variasi produk yang dianalisis cukup besar sehingga memungkinkan analisis yang lebih komprehensif terhadap pola penjualan produk.
+
+#### 2. Distribusi Harga Produk
+Grafik **Price Distribution** menunjukkan bahwa sebagian besar produk berada pada rentang harga **di bawah Rp50.000**. Produk dengan harga lebih tinggi relatif lebih sedikit jumlahnya. Hal ini menunjukkan bahwa mayoritas produk yang dijual termasuk dalam kategori **produk dengan harga terjangkau (fast moving consumer goods)**.
+
+#### 3. Hubungan Harga dan Jumlah Penjualan
+Visualisasi **Price vs Quantity** menunjukkan bahwa produk dengan harga yang lebih rendah cenderung memiliki jumlah penjualan yang lebih tinggi dibandingkan produk dengan harga tinggi. Hal ini mengindikasikan adanya kecenderungan bahwa produk dengan harga terjangkau lebih sering dibeli oleh pelanggan.
+
+#### 4. Kecepatan Penjualan Produk
+Grafik **Product Velocity** menunjukkan tingkat perputaran produk yang diukur dari jumlah unit yang terjual per hari. Beberapa produk memiliki tingkat perputaran yang tinggi sehingga dapat dikategorikan sebagai **fast moving products**, sementara produk lainnya memiliki tingkat perputaran yang lebih rendah.
+
+#### 5. Produk dengan Revenue Tertinggi
+Pada grafik **Top Product Revenue**, beberapa produk memberikan kontribusi revenue yang signifikan dibandingkan produk lainnya. Produk seperti **Bright Tabung Gas Elpiji 5.5 Kg** dan beberapa produk rumah tangga lainnya termasuk dalam kelompok produk dengan kontribusi revenue terbesar.
+
+#### 6. Produk dengan Jumlah Penjualan Tertinggi
+Grafik **Top Product Quantity** menunjukkan produk yang paling sering dibeli oleh pelanggan. Produk seperti **Merah Putih Handuk 50x100 cm** dan beberapa produk kebutuhan rumah tangga memiliki jumlah penjualan yang tinggi, yang menunjukkan bahwa produk tersebut memiliki permintaan yang tinggi.
+
+#### 7. Kontribusi Revenue Berdasarkan Kategori Produk
+Visualisasi **Category Revenue** menunjukkan bahwa kategori **Personal Care** memberikan kontribusi revenue terbesar dibandingkan kategori lainnya. Hal ini diikuti oleh kategori seperti **Kebutuhan Ibu & Anak** serta **Makanan**.
+
+#### 8. Kontribusi Revenue Berdasarkan Brand
+Grafik **Brand Revenue** menunjukkan bahwa brand **Alfamart** memberikan kontribusi revenue paling besar dibandingkan brand lainnya. Brand lain seperti **Wardah**, **Bright**, dan **Prenagen** juga memberikan kontribusi yang cukup signifikan terhadap total penjualan.
+
+---
+
+### Customer Analysis
+
+Modul **Customer Analysis** memberikan gambaran mengenai karakteristik pelanggan, pertumbuhan pelanggan baru, distribusi pelanggan berdasarkan gender dan wilayah, serta kontribusi pelanggan terhadap penjualan.
+
+#### 1. Aktivitas Pelanggan
+Pada periode tahun **2024**, jumlah **pelanggan aktif mencapai sekitar 5.6K pelanggan**, dengan peningkatan sebesar **31.5% dibandingkan periode sebelumnya**. Hal ini menunjukkan adanya pertumbuhan jumlah pelanggan yang cukup signifikan.
+
+Selain itu, rasio **New Customer Ratio mencapai 100%**, yang menunjukkan bahwa seluruh pelanggan pada periode ini merupakan pelanggan baru dalam sistem.
+
+#### 2. Nilai Pembelian Pertama
+Nilai **Average First Purchase** tercatat sekitar **Rp240K**, dengan peningkatan sebesar **3.7% dibandingkan periode sebelumnya**. Hal ini menunjukkan bahwa pelanggan baru memiliki nilai pembelian awal yang cukup baik.
+
+#### 3. Distribusi Pelanggan Berdasarkan Gender
+Distribusi pelanggan berdasarkan gender menunjukkan bahwa jumlah pelanggan **laki-laki dan perempuan relatif seimbang**. Pelanggan **laki-laki menyumbang sekitar 50.7% revenue**, sementara pelanggan **perempuan sekitar 49.3%**, yang menunjukkan bahwa kedua segmen memiliki kontribusi yang hampir sama terhadap penjualan.
+
+#### 4. Tren Pelanggan Baru
+Grafik **New Customer Trend** menunjukkan jumlah pelanggan baru yang relatif stabil sepanjang tahun 2024 dengan beberapa fluktuasi pada bulan tertentu. Hal ini menunjukkan adanya konsistensi dalam akuisisi pelanggan baru.
+
+#### 5. Perbandingan Pelanggan Baru dan Pelanggan Lama
+Visualisasi **New vs Returning Customers** menunjukkan bahwa pelanggan baru memiliki kontribusi yang cukup dominan dalam aktivitas transaksi. Hal ini mengindikasikan adanya pertumbuhan basis pelanggan selama periode analisis.
+
+#### 6. Distribusi Pelanggan Berdasarkan Kota
+Grafik **Customer by City** menunjukkan bahwa pelanggan berasal dari berbagai kota besar seperti **Depok, Tangerang Selatan, Yogyakarta, Bogor, Makassar, dan Malang**. Hal ini menunjukkan bahwa jangkauan pelanggan cukup luas di berbagai wilayah.
+
+#### 7. Kota dengan Kontribusi Revenue Tertinggi
+Visualisasi **Top Cities** menunjukkan bahwa kota **Depok** memberikan kontribusi revenue terbesar dibandingkan kota lainnya, diikuti oleh **Tangerang Selatan** dan **Yogyakarta**.
+
+#### 8. Pelanggan dengan Kontribusi Penjualan Tertinggi
+Tabel **Top Customers** menampilkan pelanggan dengan kontribusi transaksi tertinggi. Beberapa pelanggan seperti **CUT SILVIA WIDIASTUTI** dan **CUT WINDA SITOMPUL** termasuk dalam pelanggan dengan nilai transaksi tertinggi selama periode analisis.
+
+---
+
+### Market Basket Analysis
+
+Modul **Market Basket Analysis** digunakan untuk mengidentifikasi pola pembelian produk yang sering dibeli secara bersamaan dalam satu transaksi. Analisis ini dilakukan dengan membandingkan pola transaksi antara **member** dan **non-member**.
+
+#### 1. Aktivitas Transaksi Member dan Non-Member
+Berdasarkan indikator pada dashboard, jumlah transaksi dari **non-member (14.5K transaksi)** lebih tinggi dibandingkan **member (7K transaksi)**. Hal ini menunjukkan bahwa sebagian besar aktivitas pembelian berasal dari pelanggan non-member.
+
+Namun demikian, nilai **Average Transaction Value (ATV)** antara kedua kelompok relatif mirip, yaitu sekitar **Rp 240K per transaksi**, yang menunjukkan bahwa nilai pembelian rata-rata pelanggan tidak jauh berbeda antara member dan non-member.
+
+#### 2. Jumlah Produk dalam Setiap Transaksi
+Nilai **Average Items per Transaction** menunjukkan bahwa pelanggan member membeli sekitar **10.51 item per transaksi**, sedangkan pelanggan non-member membeli sekitar **10.49 item per transaksi**. Hal ini menunjukkan bahwa pola pembelian antara kedua kelompok pelanggan relatif serupa dalam hal jumlah produk yang dibeli.
+
+#### 3. Tren Transaksi
+Grafik **Transaction Trend** menunjukkan bahwa jumlah transaksi non-member secara konsisten lebih tinggi dibandingkan member sepanjang periode analisis. Hal ini menunjukkan bahwa pelanggan non-member masih mendominasi aktivitas transaksi.
+
+#### 4. Tren Nilai Transaksi
+Grafik **Average Transaction Value Trend** menunjukkan bahwa nilai transaksi rata-rata antara member dan non-member relatif stabil sepanjang periode analisis, dengan beberapa fluktuasi pada bulan tertentu.
+
+#### 5. Keterkaitan Antar Kategori Produk
+Visualisasi **Category Affinity** menunjukkan adanya hubungan pembelian antar kategori produk. Beberapa kategori seperti **Makanan**, **Minuman**, dan **Personal Care** memiliki tingkat keterkaitan yang cukup tinggi, yang menunjukkan bahwa kategori tersebut sering dibeli secara bersamaan dalam satu transaksi.
+
+#### 6. Pasangan Subkategori Produk
+Tabel **Top Subcategory Pairs** menunjukkan kombinasi subkategori produk yang paling sering dibeli bersama. Contohnya, kombinasi seperti **Makanan Ringan dengan Roti, Selai & Sereal** serta **Makanan Instan dengan Makanan Ringan** sering muncul dalam satu transaksi.
+
+Hal ini menunjukkan adanya pola pembelian yang dapat dimanfaatkan untuk strategi **bundling produk** atau **penataan produk pada rak toko**.
+
+#### 7. Pasangan Produk yang Sering Dibeli Bersama
+Analisis **Top Product Pairs** menunjukkan beberapa pasangan produk yang sering muncul dalam transaksi yang sama. Pola ini memberikan indikasi bahwa pelanggan cenderung membeli produk tertentu secara bersamaan, yang dapat dimanfaatkan dalam strategi promosi atau rekomendasi produk.
+
+---
+
+### Kesimpulan Market Basket Analysis
+Secara umum, hasil Market Basket Analysis menunjukkan bahwa terdapat pola pembelian tertentu antar kategori maupun antar produk. Informasi ini dapat digunakan untuk memahami perilaku pelanggan serta membantu dalam pengambilan keputusan terkait strategi pemasaran, penempatan produk, dan promosi penjualan.
+
+---
 
 ## 👨‍💻 Tim Pengembang
 
