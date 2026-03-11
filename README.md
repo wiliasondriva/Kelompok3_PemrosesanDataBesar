@@ -1,6 +1,6 @@
 # 📊 Retail Analytics Dashboard - Kelompok 3
 
-# Deskripsi Dataset
+## Deskripsi Dataset
 
 Dataset yang digunakan dalam project ini merupakan **dataset gabungan yang disusun khusus untuk keperluan pembelajaran**. Data diperoleh melalui proses **web scraping dari platform Alfagift**, serta dilengkapi dengan **data bangkitan sintetik** untuk memperkaya struktur data dan meningkatkan kompleksitas kasus analisis.
 
@@ -18,7 +18,7 @@ Dataset ini digunakan sebagai dasar dalam melakukan berbagai analisis pada dashb
 
 ---
 
-# Tujuan Dashboard
+## Tujuan Dashboard
 
 Dashboard ini dibuat dengan tujuan untuk membantu memahami performa bisnis retail melalui visualisasi data yang interaktif dan informatif. Melalui dashboard ini, pengguna dapat mengeksplorasi berbagai aspek data transaksi penjualan secara lebih mudah dan intuitif.
 
@@ -34,11 +34,11 @@ Dengan adanya dashboard ini, proses eksplorasi dan analisis data dapat dilakukan
 
 ---
 
-# Fitur Dashboard
+## Fitur Dashboard
 
 Dashboard ini dilengkapi dengan berbagai fitur yang memungkinkan pengguna untuk melakukan eksplorasi data secara interaktif.
 
-### 1. Filtering Data
+#### 1. Filtering Data
 
 Dashboard menyediakan beberapa fitur filtering yang memungkinkan pengguna melakukan eksplorasi data secara interaktif berdasarkan berbagai dimensi analisis.
 
@@ -67,7 +67,7 @@ Filter yang tersedia pada dashboard antara lain:
 
 Fitur filtering ini memungkinkan pengguna melakukan eksplorasi data secara lebih fleksibel untuk memahami berbagai pola dalam data transaksi.
 
-### 2. Visualisasi Analitik
+#### 2. Visualisasi Analitik
 
 Dashboard menyajikan berbagai jenis visualisasi data untuk mempermudah analisis, seperti:
 
@@ -79,17 +79,17 @@ Dashboard menyajikan berbagai jenis visualisasi data untuk mempermudah analisis,
 
 Visualisasi ini membantu pengguna memahami pola data secara lebih intuitif dan mendukung proses analisis yang lebih efektif.
 
-## Dashboard Modules
+### Dashboard Modules
 
 Dashboard ini terdiri dari lima modul utama yang masing-masing dirancang untuk menganalisis aspek berbeda dari aktivitas penjualan retail.
 
 ---
 
-## 1. Sales Overview
+### 1. Sales Overview
 
 Modul ini memberikan gambaran umum mengenai performa penjualan secara keseluruhan pada periode yang dipilih. Visualisasi pada bagian ini membantu memonitor tren penjualan, distribusi metode pembayaran, serta aktivitas transaksi.
 
-### KPI
+##### KPI
 - Total Revenue
 - Total Transactions
 - Total Items Sold
@@ -97,7 +97,7 @@ Modul ini memberikan gambaran umum mengenai performa penjualan secara keseluruha
 - Average Order Value
 - Active Stores
 
-### Visualisasi
+##### Visualisasi
 - Revenue Trend  
   Menampilkan tren revenue dari waktu ke waktu untuk melihat perkembangan penjualan.
 
@@ -112,16 +112,16 @@ Modul ini memberikan gambaran umum mengenai performa penjualan secara keseluruha
 
 ---
 
-## 2. Store Analysis
+### 2. Store Analysis
 
 Modul ini digunakan untuk menganalisis performa setiap toko serta kontribusi masing-masing toko terhadap total penjualan.
 
-### KPI
+##### KPI
 - Active Stores
 - Top Store Revenue
 - Average Order Value per Store
 
-### Visualisasi
+##### Visualisasi
 - Top Store Revenue  
   Menampilkan toko dengan revenue tertinggi.
 
@@ -136,16 +136,16 @@ Modul ini digunakan untuk menganalisis performa setiap toko serta kontribusi mas
 
 ---
 
-## 3. Product Analysis
+### 3. Product Analysis
 
 Modul ini digunakan untuk memahami performa produk, termasuk produk dengan penjualan tertinggi, distribusi harga produk, serta kontribusi kategori dan brand terhadap total revenue.
 
-### KPI
+##### KPI
 - Total Products
 - Total Brands
 - Total Categories
 
-### Visualisasi
+##### Visualisasi
 - Top Product Revenue  
   Menampilkan produk dengan kontribusi revenue terbesar.
 
@@ -169,18 +169,18 @@ Modul ini digunakan untuk memahami performa produk, termasuk produk dengan penju
 
 ---
 
-## 4. Customer Analysis
+### 4. Customer Analysis
 
 Modul ini digunakan untuk memahami karakteristik pelanggan serta perilaku pembelian pelanggan.
 
-### KPI
+##### KPI
 - Total Active Customers
 - New Customer Ratio
 - Average First Purchase Value
 - Female Customers
 - Male Customers
 
-### Visualisasi
+##### Visualisasi
 - New Customer Trend  
   Menampilkan tren pelanggan baru dari waktu ke waktu.
 
@@ -204,11 +204,11 @@ Modul ini digunakan untuk memahami karakteristik pelanggan serta perilaku pembel
 
 ---
 
-## 5. Market Basket Analysis
+### 5. Market Basket Analysis
 
 Modul ini digunakan untuk menganalisis pola pembelian pelanggan serta hubungan antar produk atau kategori yang sering dibeli secara bersamaan dalam satu transaksi.
 
-### KPI
+##### KPI
 - Member Transactions
 - Average Items per Transaction (Member)
 - Average Transaction Value (Member)
@@ -216,7 +216,7 @@ Modul ini digunakan untuk menganalisis pola pembelian pelanggan serta hubungan a
 - Average Items per Transaction (Non-Member)
 - Average Transaction Value (Non-Member)
 
-### Visualisasi
+##### Visualisasi
 - Transaction Trend  
   Menampilkan tren jumlah transaksi antara member dan non-member.
 
@@ -234,3 +234,42 @@ Modul ini digunakan untuk menganalisis pola pembelian pelanggan serta hubungan a
 
 - Top Subcategory Pairs (Non-Member)  
   Menampilkan pasangan subkategori produk yang paling sering dibeli bersama oleh non-member.
+
+### Dashboard Preview
+Berikut merupakan tampilan utama dari dashboard interaktif yang dikembangkan menggunakan Shiny.
+
+## Dashboard Screenshots
+
+### Home
+
+![Sales Overview](assets/home.png)
+
+---
+
+### Sales Overview
+
+![Sales Overview](assets/sales_overview.png)
+
+---
+
+### Store Analysis
+
+![Store Analysis](assets/store_analysis.png)
+
+---
+
+### Product Analysis
+
+![Product Analysis](assets/product_analysis.png)
+
+---
+
+### Customer Analysis
+
+![Customer Analysis](assets/customer_analysis.png)
+
+---
+
+### Market Basket Analysis
+
+![Market Basket Analysis](assets/market_basket.png)
