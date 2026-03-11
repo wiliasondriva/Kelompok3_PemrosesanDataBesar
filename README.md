@@ -611,3 +611,31 @@ Pada dokumentasi ini, interpretasi hasil difokuskan pada periode tahun 2024 deng
 Pemilihan periode ini dilakukan untuk memperoleh insight yang lebih relevan terhadap kondisi bisnis terkini, sehingga analisis yang dihasilkan dapat menggambarkan pola transaksi, performa penjualan, serta perilaku pelanggan pada periode terbaru.
 
 Berdasarkan analisis pada dashboard, beberapa interpretasi hasil dan insight utama yang diperoleh adalah sebagai berikut.
+
+## 👨‍💻 Tim Pengembang
+
+### 📊 Data Analyst
+**Wilia Sondriva**  
+NIM: M0501251019  
+Peran: Analisis data, identifikasi KPI, validasi dashboard, serta penyusunan insight utama dari data transaksi.
+
+---
+
+### 🗄️ Database Manager
+**Ni Made Ray Diantari**  
+NIM: M0501251033  
+Peran: Mendesain struktur database, menyusun ERD, serta menyiapkan query SQL untuk kebutuhan dashboard.
+
+---
+
+### 🎨 Frontend Developer
+**Rosita Ria Rusesta**  
+NIM: M0501251016  
+Peran: Mendesain tampilan UI dashboard, mengatur layout visualisasi, serta memastikan interaksi pengguna berjalan dengan baik.
+
+---
+
+### ⚙️ Backend Developer
+**Naila Nabiha Qonita**  
+NIM: M0501251060  
+Peran: Menghubungkan aplikasi R Shiny dengan database, mengelola reaktivitas server, serta memproses data untuk visualisasi.
