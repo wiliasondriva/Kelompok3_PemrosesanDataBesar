@@ -281,3 +281,15 @@ Berikut merupakan tampilan utama dari dashboard interaktif yang dikembangkan men
 ### Market Basket Analysis
 
 ![Market Basket Analysis](assets/market_basket.png)
+
+---
+
+## Interpretation & Key Insights
+
+Dataset mencakup periode transaksi dari **5 Januari 2021 hingga 30 Desember 2024**.  
+Dashboard menyediakan fitur filtering yang memungkinkan pengguna untuk menganalisis data pada berbagai rentang waktu.
+
+Pada dokumentasi ini, interpretasi hasil difokuskan pada **periode tahun 2024** untuk memberikan gambaran kondisi penjualan terbaru berdasarkan data yang tersedia.
+
+Berdasarkan analisis pada dashboard, beberapa interpretasi hasil dan insight utama yang diperoleh adalah sebagai berikut:
+
